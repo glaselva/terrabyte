@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerraByte Merch | Official Gear</title>
+    <!-- Fonts e Tailwind -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2D3436', accent: '#00B894', highlight: '#D6A2E8',
+                        offwhite: '#DFE6E9', surface: '#394042',
+                    },
+                    fontFamily: { sans: ['Montserrat', 'sans-serif'], mono: ['Ubuntu Mono', 'monospace'], }
+                }
+            }
+        }
+    </script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-primary text-offwhite font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- CART PANEL -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden backdrop-blur-sm transition-opacity"></div>
+    <div id="cart-panel" class="fixed top-0 right-0 w-full md:w-96 h-full bg-surface border-l border-gray-700 z-[70] transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+        <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-primary">
+            <h2 class="font-mono text-xl font-bold flex items-center gap-2"><span class="text-accent">></span> CART.log</h2>
+            <button id="close-cart" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+            <div id="empty-cart-msg" class="text-center text-gray-500 mt-10 font-mono text-sm">[NULL] Cart is empty.</div>
+        </div>
+        <div class="p-6 border-t border-gray-700 bg-primary">
+            <div class="flex justify-between items-center mb-4 font-bold text-lg">
+                <span>TOTAL:</span><span id="cart-total" class="font-mono text-accent">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-accent text-primary font-bold py-3 rounded hover:bg-white transition-colors font-mono">$ sudo checkout_stripe</button>
+        </div>
+    </div>
+
+<!-- NAVBAR CORRETTA DEFINITIVA -->
+<nav class="fixed w-full z-50 bg-primary/95 backdrop-blur border-b border-gray-700 px-6 py-4">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+        
+        <!-- 1. Logo -->
+        <a href="index.html" class="font-mono text-xl font-bold text-accent hover:opacity-80 transition-opacity">
+            <span class="text-highlight">&lt;</span>TerraByte<span class="text-highlight">/&gt;</span>
+        </a>
+        
+        <!-- 2. Menu Desktop -->
+        <ul class="hidden md:flex space-x-6 font-mono text-sm">
+            <li><a href="index.html" class="hover:text-accent transition-colors">./home</a></li>
+            <li><a href="menu.html" class="hover:text-accent transition-colors">./menu</a></li>
+            <li><a href="shop.html" class="hover:text-accent transition-colors">./shop_merch</a></li>
+            <li><a href="coworking.html" class="hover:text-accent transition-colors">./coworking</a></li>
+            <li><a href="sustainability.html" class="hover:text-highlight transition-colors">./zero_waste</a></li>
+        </ul>
+
+        <!-- 3. Gruppo Azioni Destra -->
+        <div class="flex items-center gap-4">
+            
+            <!-- Bottone Carrello -->
+            <button id="open-cart-btn" class="relative text-gray-300 hover:text-white transition-colors">
+                <span class="text-xl">🛒</span>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+            </button>
+
+            <!-- Pulsante Prenota -->
+            <a href="coworking.html#book" class="hidden md:block bg-accent text-primary font-bold px-4 py-2 rounded hover:bg-white transition-colors border border-transparent text-sm">
+                Prenota_Desk()
+            </a>
+
+            <!-- Hamburger Mobile -->
+            <div id="mobile-menu-btn" class="md:hidden text-accent text-2xl cursor-pointer p-1 ml-2">
+                &#9776; 
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Menu Mobile Dropdown -->
+    <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-primary border-b border-gray-700 shadow-xl">
+        <ul class="flex flex-col p-4 space-y-4 font-mono text-sm">
+            <li><a href="index.html" class="block hover:text-accent">./home</a></li>
+            <li><a href="menu.html" class="block hover:text-accent">./menu</a></li>
+            <li><a href="shop.html" class="block hover:text-accent">./shop_merch</a></li>
+            <li><a href="coworking.html" class="block hover:text-accent">./coworking</a></li>
+            <li><a href="sustainability.html" class="block hover:text-highlight">./zero_waste</a></li>
+            <li>
+                <a href="coworking.html#book" class="block text-center bg-accent text-primary font-bold px-4 py-3 rounded hover:bg-white transition-colors">
+                    Prenota_Desk()
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+
+    <!-- CONTENT: MERCH -->
+    <main class="flex-grow pt-32 pb-20 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <header class="text-center mb-16">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Official <span class="text-accent">Merch</span></h1>
+                <p class="font-mono text-gray-400">Gear up for your next coding session.</p>
+            </header>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                
+                <!-- Item 1: Tazza -->
+                <div class="bg-surface rounded-xl overflow-hidden group hover:shadow-[0_0_20px_rgba(0,184,148,0.2)] transition-all border border-gray-700">
+                    <div class="h-64 bg-gray-800 relative overflow-hidden">
+                        <img src="Immagini/tazza.jpg" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-80 group-hover:opacity-100" alt="Mug">
+                        <div class="absolute top-4 right-4 bg-black/70 text-white text-xs font-mono px-2 py-1 rounded">LIMITED</div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-xl">TerraByte Mug v2.0</h3>
+                            <span class="font-mono text-accent text-lg">€ 15.00</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-6">Ceramica nera opaca. Mantiene il caffè caldo per tutto il deploy.</p>
+                        
+                        <!-- BOTTONE AGGIUNGI AL CARRELLO -->
+                        <!-- Nota gli attributi data-name e data-price! -->
+                        <button class="w-full border border-accent text-accent hover:bg-accent hover:text-primary font-bold py-3 rounded transition-colors font-mono flex items-center justify-center gap-2 add-to-cart-trigger"
+                                data-name="TerraByte Mug v2.0" 
+                                data-price="15.00">
+                            <span>+</span> Add_to_Cart()
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Item 2: T-Shirt -->
+                <div class="bg-surface rounded-xl overflow-hidden group hover:shadow-[0_0_20px_rgba(0,184,148,0.2)] transition-all border border-gray-700">
+                    <div class="h-64 bg-gray-800 relative overflow-hidden">
+                        <img src="Immagini/tshirt.jpg" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-80 group-hover:opacity-100" alt="T-Shirt">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-xl">Dev Tee "Git Push"</h3>
+                            <span class="font-mono text-accent text-lg">€ 25.00</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-6">100% Cotone organico. Vestibilità Oversize per massimo comfort.</p>
+                        
+                        <button class="w-full border border-accent text-accent hover:bg-accent hover:text-primary font-bold py-3 rounded transition-colors font-mono flex items-center justify-center gap-2 add-to-cart-trigger"
+                                data-name="Dev Tee Git Push" 
+                                data-price="25.00">
+                            <span>+</span> Add_to_Cart()
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Item 3: Coffee Beans -->
+                <div class="bg-surface rounded-xl overflow-hidden group hover:shadow-[0_0_20px_rgba(0,184,148,0.2)] transition-all border border-gray-700">
+                    <div class="h-64 bg-gray-800 relative overflow-hidden">
+                        <img src="Immagini/caffe.jpg" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-80 group-hover:opacity-100" alt="Coffee Bag">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-xl">Full Stack Blend (250g)</h3>
+                            <span class="font-mono text-accent text-lg">€ 12.00</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-6">Miscela Robusta/Arabica. Caffeina extra per le nottate.</p>
+                        
+                        <button class="w-full border border-accent text-accent hover:bg-accent hover:text-primary font-bold py-3 rounded transition-colors font-mono flex items-center justify-center gap-2 add-to-cart-trigger"
+                                data-name="Full Stack Blend 250g" 
+                                data-price="12.00">
+                            <span>+</span> Add_to_Cart()
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-primary border-t border-gray-800 pt-12 pb-6 text-center">
+        <p class="text-gray-600 text-xs font-mono">© 2025 TerraByte Coffee.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

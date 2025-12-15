@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coworking Space | TerraByte Coffee</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2D3436', accent: '#00B894', highlight: '#D6A2E8',
+                        offwhite: '#DFE6E9', surface: '#394042',
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        mono: ['Ubuntu Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-primary text-offwhite font-sans antialiased flex flex-col min-h-screen">
+<!-- CARRELLO LATERALE (Overlay e Pannello) -->
+<div id="cart-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden backdrop-blur-sm transition-opacity"></div>
+
+<div id="cart-panel" class="fixed top-0 right-0 w-full md:w-96 h-full bg-surface border-l border-gray-700 z-[70] transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+    <!-- Header -->
+    <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-primary">
+        <h2 class="font-mono text-xl font-bold flex items-center gap-2">
+            <span class="text-accent">></span> CART.log
+        </h2>
+        <button id="close-cart" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+    </div>
+
+    <!-- Lista Prodotti -->
+    <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+        <div id="empty-cart-msg" class="text-center text-gray-500 mt-10 font-mono text-sm">
+            [NULL] Cart is empty.<br>Select items to compile.
+        </div>
+    </div>
+
+    <!-- Footer Totale e Checkout -->
+    <div class="p-6 border-t border-gray-700 bg-primary">
+        <div class="flex justify-between items-center mb-4 font-bold text-lg">
+            <span>TOTAL:</span>
+            <span id="cart-total" class="font-mono text-accent">€ 0.00</span>
+        </div>
+        <!-- Pulsante con ID checkout-btn che viene gestito dallo script -->
+        <button id="checkout-btn" class="w-full bg-accent text-primary font-bold py-3 rounded hover:bg-white transition-colors font-mono">
+            $ sudo checkout_stripe
+        </button>
+    </div>
+</div>
+
+<!-- NAVBAR DEFINITIVA v2.0 -->
+    <!-- === 1. CARRELLO (Pannello Laterale) === -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden backdrop-blur-sm transition-opacity"></div>
+
+    <div id="cart-panel" class="fixed top-0 right-0 w-full md:w-96 h-full bg-surface border-l border-gray-700 z-[70] transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-primary">
+            <h2 class="font-mono text-xl font-bold flex items-center gap-2">
+                <span class="text-accent">></span> CART.log
+            </h2>
+            <button id="close-cart" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <!-- Lista Prodotti -->
+        <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+            <div id="empty-cart-msg" class="text-center text-gray-500 mt-10 font-mono text-sm">
+                [NULL] Cart is empty.<br>Select items to compile.
+            </div>
+        </div>
+
+        <!-- Footer Checkout -->
+        <div class="p-6 border-t border-gray-700 bg-primary">
+            <div class="flex justify-between items-center mb-4 font-bold text-lg">
+                <span>TOTAL:</span>
+                <span id="cart-total" class="font-mono text-accent">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-accent text-primary font-bold py-3 rounded hover:bg-white transition-colors font-mono">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+
+    <!-- === 2. NAVBAR (Universale per tutte le pagine) === -->
+    <nav class="fixed w-full z-50 bg-primary/95 backdrop-blur border-b border-gray-700 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            
+            <!-- Logo -->
+            <a href="index.html" class="font-mono text-xl font-bold text-accent hover:opacity-80 transition-opacity">
+                <span class="text-highlight">&lt;</span>TerraByte<span class="text-highlight">/&gt;</span>
+            </a>
+            
+            <!-- Menu Desktop -->
+            <ul class="hidden md:flex space-x-6 font-mono text-sm">
+                <li><a href="index.html" class="hover:text-accent transition-colors">./home</a></li>
+                <li><a href="menu.html" class="hover:text-accent transition-colors">./menu</a></li>
+                <li><a href="shop.html" class="hover:text-accent transition-colors">./shop_merch</a></li>
+                <li><a href="coworking.html" class="hover:text-accent transition-colors">./coworking</a></li>
+                <li><a href="sustainability.html" class="hover:text-highlight transition-colors">./zero_waste</a></li>
+            </ul>
+
+            <!-- Azioni Destra -->
+            <div class="flex items-center gap-4">
+                <!-- Bottone Carrello -->
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-white transition-colors">
+                    <span class="text-xl">🛒</span>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+
+                <!-- Pulsante Prenota -->
+                <a href="coworking.html#book" class="hidden md:block bg-accent text-primary font-bold px-4 py-2 rounded hover:bg-white transition-colors border border-transparent text-sm">
+                    Prenota_Desk()
+                </a>
+
+                <!-- Hamburger Mobile -->
+                <div id="mobile-menu-btn" class="md:hidden text-accent text-2xl cursor-pointer p-1 ml-2">
+                    &#9776; 
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Mobile Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-primary border-b border-gray-700 shadow-xl">
+            <ul class="flex flex-col p-4 space-y-4 font-mono text-sm">
+                <li><a href="index.html" class="block hover:text-accent">./home</a></li>
+                <li><a href="menu.html" class="block hover:text-accent">./menu</a></li>
+                <li><a href="shop.html" class="block hover:text-accent">./shop_merch</a></li>
+                <li><a href="coworking.html" class="block hover:text-accent">./coworking</a></li>
+                <li><a href="sustainability.html" class="block hover:text-highlight">./zero_waste</a></li>
+                <li>
+                    <a href="coworking.html#book" class="block text-center bg-accent text-primary font-bold px-4 py-3 rounded hover:bg-white transition-colors">
+                        Prenota_Desk()
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+
+
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow pt-32 pb-20 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Intro Section -->
+            <div class="grid lg:grid-cols-2 gap-12 items-center mb-20">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-accent/30 text-accent text-xs font-mono mb-6">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                        </span>
+                        STATUS: 12/20 DESKS AVAILABLE
+                    </div>
+                    
+                    <h1 class="text-4xl md:text-5xl font-bold mb-6">
+                        Work_Space<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-400">Allocation</span>
+                    </h1>
+                    
+                    <p class="text-gray-300 text-lg mb-8 leading-relaxed">
+                        Dimentica i bar rumorosi. TerraByte offre uno spazio ottimizzato per il deep work, con sedie Herman Miller, monitor 4K e insonorizzazione acustica.
+                    </p>
+                    
+                    <ul class="space-y-4 font-mono text-sm">
+                        <li class="flex items-center gap-3">
+                            <span class="text-accent">✓</span> Fibra FTTH Dedicata 10Gbps
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="text-accent">✓</span> Accesso 24/7 (per membri Pro)
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="text-accent">✓</span> Phone Booths Insonorizzate
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="text-accent">✓</span> Caffè Filter Illimitato
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Immagine/Visual Coworking -->
+                <div class="relative h-[400px] rounded-2xl overflow-hidden border border-gray-700 group">
+                    <img src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070" 
+                         alt="Coworking Space" 
+                         class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 hover:opacity-80">
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary to-transparent"></div>
+                    
+                    <div class="absolute bottom-6 left-6 font-mono text-xs">
+                        <div class="bg-black/50 backdrop-blur px-3 py-2 rounded border border-gray-600">
+                            <div class="text-gray-400">LOCATION_ID</div>
+                            <div class="text-highlight">ISOLA_HQ_01</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Table -->
+            <div id="pricing" class="mb-20">
+                <h2 class="text-center font-mono text-2xl text-accent mb-12">&lt;Pricing_Plans /&gt;</h2>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Plan 1: Nomad -->
+                    <div class="bg-surface p-8 rounded-xl border border-gray-700 hover:border-gray-500 transition-all relative">
+                        <h3 class="text-xl font-bold mb-2">Nomad</h3>
+                        <div class="text-4xl font-bold mb-6 font-mono">€5<span class="text-lg text-gray-500 font-sans font-normal">/hour</span></div>
+                        <p class="text-sm text-gray-400 mb-8 border-b border-gray-700 pb-8">Per chi ha bisogno di un posto al volo tra una call e l'altra.</p>
+                        
+                        <ul class="space-y-3 text-sm mb-8 text-gray-300">
+                            <li>• Hot Desk (non assegnato)</li>
+                            <li>• Wi-Fi 1Gbps</li>
+                            <li>• 1 Espresso incluso</li>
+                        </ul>
+                        
+                        <a href="#book" class="block w-full py-3 text-center border border-gray-500 rounded hover:bg-white hover:text-black transition-colors font-bold text-sm">Select_Plan</a>
+                    </div>
+
+                    <!-- Plan 2: Pro (Featured) -->
+                    <div class="bg-surface p-8 rounded-xl border-2 border-accent transform md:-translate-y-4 shadow-[0_0_20px_rgba(0,184,148,0.15)] relative">
+                        <div class="absolute top-0 right-0 bg-accent text-primary text-xs font-bold px-3 py-1 rounded-bl-lg font-mono">RECOMMENDED</div>
+                        
+                        <h3 class="text-xl font-bold mb-2 text-accent">Dev Pro</h3>
+                        <div class="text-4xl font-bold mb-6 font-mono">€25<span class="text-lg text-gray-500 font-sans font-normal">/day</span></div>
+                        <p class="text-sm text-gray-400 mb-8 border-b border-gray-600 pb-8">La scelta migliore per una giornata intera di produttività.</p>
+                        
+                        <ul class="space-y-3 text-sm mb-8 text-gray-200">
+                            <li class="flex items-center gap-2"><span class="text-accent">✓</span> Postazione Ergonomica</li>
+                            <li class="flex items-center gap-2"><span class="text-accent">✓</span> Monitor 27" 4K USB-C</li>
+                            <li class="flex items-center gap-2"><span class="text-accent">✓</span> Wi-Fi 10Gbps</li>
+                            <li class="flex items-center gap-2"><span class="text-accent">✓</span> Filter Coffee Illimitato</li>
+                        </ul>
+                        
+                        <a href="#book" class="block w-full py-3 text-center bg-accent text-primary rounded hover:bg-white transition-colors font-bold text-sm shadow-lg">Select_Plan</a>
+                    </div>
+
+                    <!-- Plan 3: Monthly -->
+                    <div class="bg-surface p-8 rounded-xl border border-gray-700 hover:border-gray-500 transition-all">
+                        <h3 class="text-xl font-bold mb-2">Resident</h3>
+                        <div class="text-4xl font-bold mb-6 font-mono">€350<span class="text-lg text-gray-500 font-sans font-normal">/mo</span></div>
+                        <p class="text-sm text-gray-400 mb-8 border-b border-gray-700 pb-8">La tua scrivania fissa nel cuore di Milano Isola.</p>
+                        
+                        <ul class="space-y-3 text-sm mb-8 text-gray-300">
+                            <li>• Scrivania Dedicata</li>
+                            <li>• Accesso 24/7</li>
+                            <li>• Armadietto personale</li>
+                            <li>• 5h Sala Riunioni/mese</li>
+                        </ul>
+                        
+                        <a href="#book" class="block w-full py-3 text-center border border-gray-500 rounded hover:bg-white hover:text-black transition-colors font-bold text-sm">Select_Plan</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div id="book" class="max-w-2xl mx-auto bg-surface/50 p-8 rounded-xl border border-gray-700">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold mb-2">Prenota la tua postazione</h2>
+                    <p class="text-gray-400 text-sm">Compila il form per riservare il tuo slot.</p>
+                </div>
+
+                <form class="space-y-6" onsubmit="event.preventDefault(); alert('Richiesta inviata! Ti contatteremo a breve.');">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-mono text-gray-400 mb-2">INPUT: NAME</label>
+                            <input type="text" placeholder="Mario Rossi" class="w-full bg-primary border border-gray-600 rounded p-3 text-sm focus:border-accent focus:outline-none transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-gray-400 mb-2">INPUT: EMAIL</label>
+                            <input type="email" placeholder="mario@dev.com" class="w-full bg-primary border border-gray-600 rounded p-3 text-sm focus:border-accent focus:outline-none transition-colors">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-mono text-gray-400 mb-2">SELECT: PLAN</label>
+                        <select class="w-full bg-primary border border-gray-600 rounded p-3 text-sm focus:border-accent focus:outline-none transition-colors">
+                            <option>Nomad (€5/h)</option>
+                            <option selected>Dev Pro (€25/day)</option>
+                            <option>Resident (€350/mo)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-mono text-gray-400 mb-2">INPUT: DATE</label>
+                        <input type="date" class="w-full bg-primary border border-gray-600 rounded p-3 text-sm focus:border-accent focus:outline-none transition-colors text-gray-400">
+                    </div>
+
+                    <button type="submit" class="w-full bg-highlight text-primary font-bold py-4 rounded hover:bg-white transition-colors font-mono">
+                        CONFIRM_BOOKING()
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-primary border-t border-gray-800 pt-12 pb-6">
+        <div class="text-center">
+            <p class="text-gray-600 text-xs font-mono">
+                © 2025 TerraByte Coffee.
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerraByte Coffee | Milano Isola</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (CDN per sviluppo) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configurazione Tema Personalizzato -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2D3436',   // Background scuro
+                        accent: '#00B894',    // Verde Matrix
+                        highlight: '#D6A2E8', // Lilla Cyberpunk
+                        offwhite: '#DFE6E9',  // Testo principale
+                        surface: '#394042',   // Background card/sezioni
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        mono: ['Ubuntu Mono', 'monospace'],
+                    },
+                    backgroundImage: {
+                        'hero-pattern': "url('Immagini/caffetteria.jpg')",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Tuo CSS personalizzato (nella stessa cartella) -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-primary text-offwhite font-sans antialiased flex flex-col min-h-screen">
+<!-- CARRELLO LATERALE (Overlay e Pannello) -->
+<div id="cart-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden backdrop-blur-sm transition-opacity"></div>
+
+<div id="cart-panel" class="fixed top-0 right-0 w-full md:w-96 h-full bg-surface border-l border-gray-700 z-[70] transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+    <!-- Header -->
+    <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-primary">
+        <h2 class="font-mono text-xl font-bold flex items-center gap-2">
+            <span class="text-accent">></span> CART.log
+        </h2>
+        <button id="close-cart" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+    </div>
+
+    <!-- Lista Prodotti -->
+    <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+        <div id="empty-cart-msg" class="text-center text-gray-500 mt-10 font-mono text-sm">
+            [NULL] Cart is empty.<br>Select items to compile.
+        </div>
+    </div>
+
+    <!-- Footer Totale e Checkout -->
+    <div class="p-6 border-t border-gray-700 bg-primary">
+        <div class="flex justify-between items-center mb-4 font-bold text-lg">
+            <span>TOTAL:</span>
+            <span id="cart-total" class="font-mono text-accent">€ 0.00</span>
+        </div>
+        <!-- Pulsante con ID checkout-btn che viene gestito dallo script -->
+        <button id="checkout-btn" class="w-full bg-accent text-primary font-bold py-3 rounded hover:bg-white transition-colors font-mono">
+            $ sudo checkout_stripe
+        </button>
+    </div>
+</div>
+
+<!-- NAVBAR DEFINITIVA v2.0 -->
+    <!-- === 1. CARRELLO (Pannello Laterale) === -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden backdrop-blur-sm transition-opacity"></div>
+
+    <div id="cart-panel" class="fixed top-0 right-0 w-full md:w-96 h-full bg-surface border-l border-gray-700 z-[70] transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-primary">
+            <h2 class="font-mono text-xl font-bold flex items-center gap-2">
+                <span class="text-accent">></span> CART.log
+            </h2>
+            <button id="close-cart" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <!-- Lista Prodotti -->
+        <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+            <div id="empty-cart-msg" class="text-center text-gray-500 mt-10 font-mono text-sm">
+                [NULL] Cart is empty.<br>Select items to compile.
+            </div>
+        </div>
+
+        <!-- Footer Checkout -->
+        <div class="p-6 border-t border-gray-700 bg-primary">
+            <div class="flex justify-between items-center mb-4 font-bold text-lg">
+                <span>TOTAL:</span>
+                <span id="cart-total" class="font-mono text-accent">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-accent text-primary font-bold py-3 rounded hover:bg-white transition-colors font-mono">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+
+    <!-- === 2. NAVBAR (Universale per tutte le pagine) === -->
+    <nav class="fixed w-full z-50 bg-primary/95 backdrop-blur border-b border-gray-700 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            
+            <!-- Logo -->
+            <a href="index.html" class="font-mono text-xl font-bold text-accent hover:opacity-80 transition-opacity">
+                <span class="text-highlight">&lt;</span>TerraByte<span class="text-highlight">/&gt;</span>
+            </a>
+            
+            <!-- Menu Desktop -->
+            <ul class="hidden md:flex space-x-6 font-mono text-sm">
+                <li><a href="index.html" class="hover:text-accent transition-colors">./home</a></li>
+                <li><a href="menu.html" class="hover:text-accent transition-colors">./menu</a></li>
+                <li><a href="shop.html" class="hover:text-accent transition-colors">./shop_merch</a></li>
+                <li><a href="coworking.html" class="hover:text-accent transition-colors">./coworking</a></li>
+                <li><a href="sustainability.html" class="hover:text-highlight transition-colors">./zero_waste</a></li>
+            </ul>
+
+            <!-- Azioni Destra -->
+            <div class="flex items-center gap-4">
+                <!-- Bottone Carrello -->
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-white transition-colors">
+                    <span class="text-xl">🛒</span>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+
+                <!-- Pulsante Prenota -->
+                <a href="coworking.html#book" class="hidden md:block bg-accent text-primary font-bold px-4 py-2 rounded hover:bg-white transition-colors border border-transparent text-sm">
+                    Prenota_Desk()
+                </a>
+
+                <!-- Hamburger Mobile -->
+                <div id="mobile-menu-btn" class="md:hidden text-accent text-2xl cursor-pointer p-1 ml-2">
+                    &#9776; 
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Mobile Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-primary border-b border-gray-700 shadow-xl">
+            <ul class="flex flex-col p-4 space-y-4 font-mono text-sm">
+                <li><a href="index.html" class="block hover:text-accent">./home</a></li>
+                <li><a href="menu.html" class="block hover:text-accent">./menu</a></li>
+                <li><a href="shop.html" class="block hover:text-accent">./shop_merch</a></li>
+                <li><a href="coworking.html" class="block hover:text-accent">./coworking</a></li>
+                <li><a href="sustainability.html" class="block hover:text-highlight">./zero_waste</a></li>
+                <li>
+                    <a href="coworking.html#book" class="block text-center bg-accent text-primary font-bold px-4 py-3 rounded hover:bg-white transition-colors">
+                        Prenota_Desk()
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+
+
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow">
+        
+        <!-- HERO SECTION -->
+        <section class="h-screen flex items-center justify-center relative overflow-hidden">
+            <!-- Immagine di sfondo con overlay -->
+            <div class="absolute inset-0 bg-hero-pattern bg-cover bg-center opacity-20"></div>
+            <!-- Overlay gradiente per migliorare leggibilità -->
+            <div class="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-primary/80"></div>
+            
+            <div class="relative z-10 text-center px-4 max-w-4xl mx-auto mt-16">
+                <!-- Tagline Monospace -->
+                <p class="font-mono text-accent mb-4 tracking-widest text-sm md:text-base">
+                    // SYSTEM.INIT: MILANO ISOLA
+                </p>
+                
+                <!-- Titolo con Effetto Typewriter (gestito da script.js) -->
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 min-h-[120px] md:min-h-[160px] leading-tight">
+                    <span class="typewriter-effect" data-text="Brewing Code, Roasting Nature."></span>
+                    <span class="cursor-blink text-accent">_</span>
+                </h1>
+                
+                <p class="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+                    Il primo <span class="text-highlight font-bold">Phygital Coffee</span> progettato per sviluppatori.
+                    <br class="hidden md:block">Connessione fibra 10Gbps, Single Origin Coffee e postazioni ergonomiche.
+                </p>
+                
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <a href="menu.html" class="bg-accent text-primary px-8 py-3 rounded font-bold font-mono hover:bg-white hover:scale-105 transition-all duration-300">
+                        View_Menu
+                    </a>
+                    <a href="coworking.html" class="border border-gray-600 text-offwhite px-8 py-3 rounded font-mono hover:border-highlight hover:text-highlight transition-all duration-300 bg-primary/50">
+                        $ cd ./coworking
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Scroll Down Indicator -->
+            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce text-gray-500">
+                <span class="font-mono text-xs">scroll_down</span>
+                <div class="w-px h-8 bg-gray-500 mx-auto mt-2"></div>
+            </div>
+        </section>
+
+        <!-- FEATURES SECTION (Griglia 3 colonne) -->
+        <section class="py-20 px-6 bg-surface/30">
+            <div class="max-w-6xl mx-auto">
+                <div class="mb-12 text-center md:text-left">
+                    <h2 class="text-3xl font-bold mb-2">Hardware & Specs</h2>
+                    <div class="h-1 w-20 bg-accent mx-auto md:mx-0"></div>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Feature 1 -->
+                    <div class="bg-primary p-8 rounded-lg border border-gray-800 hover:border-accent transition-colors group">
+                        <div class="text-4xl mb-6 bg-surface w-16 h-16 flex items-center justify-center rounded-full group-hover:bg-accent group-hover:text-primary transition-colors">
+                            ⚡
+                        </div>
+                        <h3 class="font-bold text-xl mb-3">Gigabit Network</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            Connettività ridondante in fibra ottica dedicata. Ping < 2ms verso i principali server europei.
+                        </p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="bg-primary p-8 rounded-lg border border-gray-800 hover:border-highlight transition-colors group">
+                        <div class="text-4xl mb-6 bg-surface w-16 h-16 flex items-center justify-center rounded-full group-hover:bg-highlight group-hover:text-primary transition-colors">
+                            ☕
+                        </div>
+                        <h3 class="font-bold text-xl mb-3">Specialty Grade</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            Caffè valutati 85+ punti SCA. Tostati localmente ogni settimana per la massima freschezza.
+                        </p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="bg-primary p-8 rounded-lg border border-gray-800 hover:border-accent transition-colors group">
+                        <div class="text-4xl mb-6 bg-surface w-16 h-16 flex items-center justify-center rounded-full group-hover:bg-accent group-hover:text-primary transition-colors">
+                            🌿
+                        </div>
+                        <h3 class="font-bold text-xl mb-3">Biophilic Design</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            Purificazione dell'aria naturale tramite piante. Ambiente ottimizzato per la concentrazione profonda.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CODING SNIPPET SECTION (Decorativo) -->
+        <section class="py-20 px-6 border-t border-gray-800 bg-black">
+            <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-12">
+                <div class="flex-1 text-center md:text-left">
+                    <h2 class="text-3xl font-bold mb-4">Compila la tua giornata.</h2>
+                    <p class="text-gray-400 mb-6">
+                        Non offriamo solo caffè, ma un ambiente di runtime ottimizzato per la tua produttività. Vieni a trovarci in Via Pastrengo.
+                    </p>
+                </div>
+                
+                <!-- Fake Code Block -->
+                <div class="flex-1 w-full bg-[#1e1e1e] p-6 rounded-lg shadow-2xl font-mono text-xs md:text-sm border border-gray-700 overflow-hidden">
+                    <div class="flex gap-2 mb-4">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <div class="text-gray-300">
+                        <span class="text-highlight">class</span> <span class="text-yellow-300">Developer</span> {<br>
+                        &nbsp;&nbsp;<span class="text-highlight">constructor</span>(caffeine) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-blue-400">this</span>.productivity = <span class="text-accent">0</span>;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-blue-400">this</span>.drink(caffeine);<br>
+                        &nbsp;&nbsp;}<br><br>
+                        &nbsp;&nbsp;<span class="text-yellow-300">drink</span>(coffee) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-highlight">if</span> (coffee.origin === <span class="text-green-300">"TerraByte"</span>) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-blue-400">this</span>.productivity = <span class="text-accent">100</span>;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-primary border-t border-gray-800 pt-12 pb-6">
+        <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-8 mb-8">
+            <div class="col-span-1 md:col-span-2">
+                <div class="font-mono text-xl font-bold text-accent mb-4">
+                    <span class="text-highlight">&lt;</span>TerraByte<span class="text-highlight">/&gt;</span>
+                </div>
+                <p class="text-gray-500 text-sm max-w-xs">
+                    L'intersezione tra codice e caffeina.
+                    Milano Isola District.
+                </p>
+            </div>
+            
+            <div>
+                <h4 class="font-bold mb-4 text-white">Sitemap</h4>
+                <ul class="space-y-2 text-sm text-gray-400 font-mono">
+                    <li><a href="index.html" class="hover:text-accent">> Home</a></li>
+                    <li><a href="menu.html" class="hover:text-accent">> Menu</a></li>
+                    <li><a href="coworking.html" class="hover:text-accent">> Coworking</a></li>
+                </ul>
+            </div>
+            
+            <div>
+                <h4 class="font-bold mb-4 text-white">Contact</h4>
+                <ul class="space-y-2 text-sm text-gray-400 font-mono">
+                    <li>hello@terrabyte.coffee</li>
+                    <li>+39 02 1234 5678</li>
+                    <li>Via G. de Castillia, 20124 MI</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="text-center border-t border-gray-800 pt-6">
+            <p class="text-gray-600 text-xs font-mono">
+                © 2025 TerraByte Coffee. Built for educational purposes.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Tuo Script personalizzato (nella stessa cartella) -->
+    <script src="script.js"></script>
+
+</body>
+</html>

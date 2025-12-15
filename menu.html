@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu.Config() | TerraByte Coffee</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configurazione Tema -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2D3436', accent: '#00B894', highlight: '#D6A2E8',
+                        offwhite: '#DFE6E9', surface: '#394042',
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        mono: ['Ubuntu Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Stripe JS -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-primary text-offwhite font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- === 1. NAVBAR  === -->
+    <!-- === 1. CARRELLO (Pannello Laterale) === -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden backdrop-blur-sm transition-opacity"></div>
+
+    <div id="cart-panel" class="fixed top-0 right-0 w-full md:w-96 h-full bg-surface border-l border-gray-700 z-[70] transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-primary">
+            <h2 class="font-mono text-xl font-bold flex items-center gap-2">
+                <span class="text-accent">></span> CART.log
+            </h2>
+            <button id="close-cart" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <!-- Lista Prodotti -->
+        <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+            <div id="empty-cart-msg" class="text-center text-gray-500 mt-10 font-mono text-sm">
+                [NULL] Cart is empty.<br>Select items to compile.
+            </div>
+        </div>
+
+        <!-- Footer Checkout -->
+        <div class="p-6 border-t border-gray-700 bg-primary">
+            <div class="flex justify-between items-center mb-4 font-bold text-lg">
+                <span>TOTAL:</span>
+                <span id="cart-total" class="font-mono text-accent">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-accent text-primary font-bold py-3 rounded hover:bg-white transition-colors font-mono">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+
+    <!-- === 2. NAVBAR (Universale per tutte le pagine) === -->
+    <nav class="fixed w-full z-50 bg-primary/95 backdrop-blur border-b border-gray-700 px-6 py-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            
+            <!-- Logo -->
+            <a href="index.html" class="font-mono text-xl font-bold text-accent hover:opacity-80 transition-opacity">
+                <span class="text-highlight">&lt;</span>TerraByte<span class="text-highlight">/&gt;</span>
+            </a>
+            
+            <!-- Menu Desktop -->
+            <ul class="hidden md:flex space-x-6 font-mono text-sm">
+                <li><a href="index.html" class="hover:text-accent transition-colors">./home</a></li>
+                <li><a href="menu.html" class="hover:text-accent transition-colors">./menu</a></li>
+                <li><a href="shop.html" class="hover:text-accent transition-colors">./shop_merch</a></li>
+                <li><a href="coworking.html" class="hover:text-accent transition-colors">./coworking</a></li>
+                <li><a href="sustainability.html" class="hover:text-highlight transition-colors">./zero_waste</a></li>
+            </ul>
+
+            <!-- Azioni Destra -->
+            <div class="flex items-center gap-4">
+                <!-- Bottone Carrello -->
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-white transition-colors">
+                    <span class="text-xl">🛒</span>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+
+                <!-- Pulsante Prenota -->
+                <a href="coworking.html#book" class="hidden md:block bg-accent text-primary font-bold px-4 py-2 rounded hover:bg-white transition-colors border border-transparent text-sm">
+                    Prenota_Desk()
+                </a>
+
+                <!-- Hamburger Mobile -->
+                <div id="mobile-menu-btn" class="md:hidden text-accent text-2xl cursor-pointer p-1 ml-2">
+                    &#9776; 
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Mobile Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-primary border-b border-gray-700 shadow-xl">
+            <ul class="flex flex-col p-4 space-y-4 font-mono text-sm">
+                <li><a href="index.html" class="block hover:text-accent">./home</a></li>
+                <li><a href="menu.html" class="block hover:text-accent">./menu</a></li>
+                <li><a href="shop.html" class="block hover:text-accent">./shop_merch</a></li>
+                <li><a href="coworking.html" class="block hover:text-accent">./coworking</a></li>
+                <li><a href="sustainability.html" class="block hover:text-highlight">./zero_waste</a></li>
+                <li>
+                    <a href="coworking.html#book" class="block text-center bg-accent text-primary font-bold px-4 py-3 rounded hover:bg-white transition-colors">
+                        Prenota_Desk()
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+
+
+    <!-- === 3. CONTENUTO PAGINA MENU === -->
+    <main class="flex-grow pt-32 pb-20 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <header class="mb-16 border-b border-gray-800 pb-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="h-px w-12 bg-highlight"></span>
+                    <span class="font-mono text-highlight text-sm">CURRENT_BUILD: V.2.5</span>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">System.Config(<span class="text-accent">Menu</span>)</h1>
+                <p class="font-mono text-gray-400 max-w-2xl">
+                    Seleziona il carburante per la tua sessione di coding. 
+                    Tutti i nostri chicchi sono tracciati su Blockchain.
+                </p>
+            </header>
+
+            <!-- Sezione CAFFE -->
+            <div class="mb-16">
+                <h2 class="font-mono text-xl text-accent mb-8 flex items-center">
+                    <span class="mr-2">></span> MODULES: COFFEE
+                </h2>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Card 1 -->
+                    <div class="bg-surface rounded-lg p-6 border border-gray-700 hover:border-accent hover:shadow-[0_0_15px_rgba(0,184,148,0.2)] transition-all group cursor-pointer">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-2xl font-bold group-hover:text-accent transition-colors">Espresso.exe</h3>
+                                <span class="text-xs font-mono text-gray-500">v1.0 Stable</span>
+                            </div>
+                            <span class="font-mono text-xl text-highlight">€ 1.50</span>
+                        </div>
+                        <p class="text-sm text-gray-300 mb-6">Shot singolo ad alta pressione. Note di cioccolato fondente e agrumi.</p>
+                        
+                        <div class="bg-primary/50 p-3 rounded text-xs font-mono space-y-2 border border-gray-700">
+                            <div class="flex justify-between"><span class="text-gray-500">Origin:</span><span>Ethiopia Sidamo</span></div>
+                            <div class="flex justify-between items-center"><span class="text-gray-500">Caffeine:</span><div class="w-16 h-1 bg-gray-700 rounded overflow-hidden"><div class="h-full bg-accent w-[80%]"></div></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="bg-surface rounded-lg p-6 border border-gray-700 hover:border-accent hover:shadow-[0_0_15px_rgba(0,184,148,0.2)] transition-all group cursor-pointer">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-2xl font-bold group-hover:text-accent transition-colors">V60_Filter.py</h3>
+                                <span class="text-xs font-mono text-gray-500">v3.2 Slow</span>
+                            </div>
+                            <span class="font-mono text-xl text-highlight">€ 4.00</span>
+                        </div>
+                        <p class="text-sm text-gray-300 mb-6">Estrazione manuale lenta. Perfetta per il debugging pomeridiano.</p>
+                        <div class="bg-primary/50 p-3 rounded text-xs font-mono space-y-2 border border-gray-700">
+                             <div class="flex justify-between"><span class="text-gray-500">Origin:</span><span>Kenya AA</span></div>
+                             <div class="flex justify-between items-center"><span class="text-gray-500">Caffeine:</span><div class="w-16 h-1 bg-gray-700 rounded overflow-hidden"><div class="h-full bg-accent w-[60%]"></div></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="bg-surface rounded-lg p-6 border border-gray-700 hover:border-accent hover:shadow-[0_0_15px_rgba(0,184,148,0.2)] transition-all group cursor-pointer relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-accent text-primary text-[10px] font-bold px-2 py-1 font-mono">NEW_DEPLOY</div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-2xl font-bold group-hover:text-accent transition-colors">Nitro_Cold.js</h3>
+                                <span class="text-xs font-mono text-gray-500">Async Brew</span>
+                            </div>
+                            <span class="font-mono text-xl text-highlight">€ 5.00</span>
+                        </div>
+                        <p class="text-sm text-gray-300 mb-6">Infusione a freddo 18h spillata all'azoto. Texture cremosa.</p>
+                        <div class="bg-primary/50 p-3 rounded text-xs font-mono space-y-2 border border-gray-700">
+                             <div class="flex justify-between"><span class="text-gray-500">Temp:</span><span>4°C</span></div>
+                             <div class="flex justify-between items-center"><span class="text-gray-500">Caffeine:</span><div class="w-16 h-1 bg-gray-700 rounded overflow-hidden"><div class="h-full bg-accent w-[100%]"></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sezione FOOD -->
+            <div class="mb-16">
+                <h2 class="font-mono text-xl text-highlight mb-8 flex items-center">
+                    <span class="mr-2">></span> ASSETS: FOOD
+                </h2>
+                <div class="space-y-4">
+                     <!-- Item List Style -->
+                    <div class="flex flex-col md:flex-row justify-between items-center bg-surface/50 p-4 rounded border-b border-gray-700 hover:bg-surface transition-colors cursor-pointer group hover:border-accent">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-primary w-10 h-10 flex items-center justify-center rounded text-xl">🥑</div>
+                            <div>
+                                <h3 class="font-bold group-hover:text-accent">Avocado Toast Kernel</h3>
+                                <p class="text-xs text-gray-400 font-mono">Pane multicereali, uovo pochè.</p>
+                            </div>
+                        </div>
+                        <div class="font-mono text-accent mt-2 md:mt-0">€ 8.50</div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-between items-center bg-surface/50 p-4 rounded border-b border-gray-700 hover:bg-surface transition-colors cursor-pointer group hover:border-accent">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-primary w-10 h-10 flex items-center justify-center rounded text-xl">🥞</div>
+                            <div>
+                                <h3 class="font-bold group-hover:text-accent">Pancakes Stack Overflow</h3>
+                                <p class="text-xs text-gray-400 font-mono">Torre di 3 pancakes, sciroppo d'acero.</p>
+                            </div>
+                        </div>
+                        <div class="font-mono text-accent mt-2 md:mt-0">€ 7.00</div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-between items-center bg-surface/50 p-4 rounded border-b border-gray-700 hover:bg-surface transition-colors cursor-pointer group hover:border-accent">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-primary w-10 h-10 flex items-center justify-center rounded text-xl">🍪</div>
+                            <div>
+                                <h3 class="font-bold group-hover:text-accent">Cookie.set(Chocolate)</h3>
+                                <p class="text-xs text-gray-400 font-mono">Cookie americano fatto in casa.</p>
+                            </div>
+                        </div>
+                        <div class="font-mono text-accent mt-2 md:mt-0">€ 3.00</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-primary border-t border-gray-800 pt-12 pb-6">
+        <div class="text-center">
+            <p class="text-gray-600 text-xs font-mono">© 2025 TerraByte Coffee.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
