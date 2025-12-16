@@ -206,9 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(typeWriter, 500);
     }
 
-    // B. Navbar Active State -> RIMOSSO (Navbar neutra)
-
-    // C. Mobile Menu Toggle
+ // 5. Mobile Menu Toggle
     const menuBtn = document.getElementById('mobile-menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
 
@@ -231,3 +229,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 }); // END DOMContentLoaded
+
