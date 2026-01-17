@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog & Resources | TerraByte Coffee</title>
+    <meta name="description" content="Guide, tutorial e insights per developer. Produttività, tech stack, cultura del caffè e best practices.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tb-dark': '#1e1e1e',
+                        'tb-gray-900': '#2D3436',
+                        'tb-gray-800': '#394042',
+                        'tb-gray-700': '#4a5254',
+                        'tb-gray-600': '#636e72',
+                        'tb-gray-400': '#b2bec3',
+                        'tb-light': '#E0E0E0',
+                        'tb-green': '#00B894',
+                        'tb-green-dark': '#00a080',
+                        'tb-purple': '#D6A2E8',
+                        'tb-blue': '#0984e3',
+                    },
+                    fontFamily: {
+                        'mono': ['Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                @apply bg-gradient-to-br from-tb-dark to-tb-gray-900 text-tb-light font-mono min-h-screen;
+            }
+
+            /* Scrollbar */
+            ::-webkit-scrollbar {
+                width: 10px;
+                background: #2D3436;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #394042;
+                border: 1px solid #00B894;
+                border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #00B894;
+            }
+        }
+
+        @layer components {
+            /* Animazioni */
+            @keyframes blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+
+            .cursor-blink {
+                animation: blink 1s step-end infinite;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.6s ease-in;
+            }
+
+            /* Card hover effect */
+            .card-hover {
+                @apply transition-all duration-300;
+            }
+
+            .card-hover:hover {
+                @apply -translate-y-1;
+                box-shadow: 0 10px 30px rgba(0, 184, 148, 0.2);
+            }
+
+            /* Border glow */
+            .border-glow-green:hover {
+                box-shadow: 0 0 20px rgba(0, 184, 148, 0.4);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CART OVERLAY -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- CART PANEL -->
+    <div id="cart-panel" class="fixed top-0 right-0 h-full w-96 max-w-full bg-gradient-to-b from-tb-gray-900 to-tb-dark shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col border-l-2 border-tb-green">
+        <div class="p-6 border-b border-tb-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-tb-green">CART.log</h2>
+            <button id="close-cart" class="text-tb-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-3">
+            <p id="empty-cart-msg" class="text-tb-gray-600 text-center mt-10">[NULL] Cart is empty.<br>Select items to compile.</p>
+        </div>
+
+        <div class="p-6 border-t border-tb-gray-800 bg-tb-gray-900">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-tb-gray-400">TOTAL:</span>
+                <span id="cart-total" class="text-2xl font-bold text-tb-green">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-tb-green hover:bg-tb-green-dark text-black font-bold py-3 rounded transition-all duration-200 transform hover:scale-105">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVBAR DEFINITIVA v2.0 -->
+    <!-- === 2. NAVBAR (Universale per tutte le pagine) === -->
+    <!-- NAVIGATION BAR -->
+    <nav class="fixed top-0 w-full bg-gray-900 bg-opacity-95 backdrop-blur-sm z-30 border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-green-400"><span class="text-tb-purple"><</span>TerraByte<span class="text-tb-purple">/></span></a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="index.html" class="text-gray-300 hover:text-green-400 transition">./home</a>
+                <a href="menu.html" class="text-gray-300 hover:text-green-400 transition">./menu</a>
+                <a href="shop.html" class="text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+                <a href="coworking.html" class="text-gray-300 hover:text-green-400 transition">./coworking</a>
+                <a href="events.html" class="text-gray-300 hover:text-green-400 transition">./events</a>
+                <a href="blog.html" class="text-green-400 font-bold transition">./blog</a>
+                <a href="sustainability.html" class="text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+
+                <!-- Hamburger Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+
+
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden px-6 pb-4 space-y-2 bg-gray-900 border-t border-gray-800">
+            <a href="index.html" class="block text-gray-300 hover:text-green-400 transition py-2">./home</a>
+            <a href="menu.html" class="block text-gray-300 hover:text-green-400 transition py-2">./menu</a>
+            <a href="shop.html" class="block text-gray-300 hover:text-green-400 transition py-2">./shop_merch</a>
+            <a href="coworking.html" class="block text-gray-300 hover:text-green-400 transition py-2">./coworking</a>
+            <a href="events.html" class="block text-gray-300 hover:text-green-400 transition py-2">./events</a>
+            <a href="blog.html" class="block text-green-400 font-bold transition py-2">./blog</a>
+            <a href="sustainability.html" class="block text-gray-300 hover:text-green-400 transition py-2">./zero_waste</a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="pt-32 pb-16 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="mb-8">
+                <p class="text-tb-green font-mono mb-2">// KNOWLEDGE.BASE</p>
+                <h1 class="text-5xl md:text-6xl font-bold mb-4">
+                    Blog & <span class="text-tb-green">Resources</span><span class="cursor-blink">_</span>
+                </h1>
+                <p class="text-xl text-tb-gray-400 max-w-3xl">
+                    Guide, tutorial e insights per developer. Produttività, tech stack, cultura del caffè e best practices da Milano Isola.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURED POST -->
+    <section class="pb-16 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="bg-gradient-to-r from-tb-gray-800 to-tb-gray-900 rounded-xl overflow-hidden border border-tb-gray-700 card-hover">
+                <div class="grid md:grid-cols-2 gap-0">
+                    <div class="h-64 md:h-auto bg-gradient-to-br from-tb-green to-tb-blue flex items-center justify-center">
+                        <span class="text-8xl">🚀</span>
+                    </div>
+                    <div class="p-8 flex flex-col justify-center">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-tb-green text-black text-xs font-bold px-3 py-1 rounded">FEATURED</span>
+                            <span class="text-tb-gray-500 text-xs">• 15 Gen 2026 • 8 min read</span>
+                        </div>
+                        <h2 class="text-3xl font-bold mb-4 text-tb-green">Setup Perfetto per Remote Developer a Milano Isola</h2>
+                        <p class="text-tb-gray-400 mb-6 leading-relaxed">
+                            Dalla scrivania Herman Miller al monitor 4K, passando per il caffè specialty: tutto quello che serve per lavorare al meglio nel cuore di Milano. Setup hardware, software tools e routine quotidiana.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#productivity</span>
+                            <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#remote-work</span>
+                            <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#milano</span>
+                        </div>
+                        <a href="perche-il-setup-conta.html" class="inline-flex items-center gap-2 text-tb-green font-bold hover:text-tb-green-dark transition">
+                            read_article() →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORIES FILTER -->
+    <section class="pb-8 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="flex flex-wrap gap-3 justify-center">
+                <button class="bg-tb-green text-black px-4 py-2 rounded font-bold text-sm transition hover:bg-tb-green-dark">
+                    # All Posts
+                </button>
+                <button class="bg-tb-gray-800 text-tb-light px-4 py-2 rounded text-sm transition hover:bg-tb-gray-700 hover:text-tb-green">
+                    # Productivity
+                </button>
+                <button class="bg-tb-gray-800 text-tb-light px-4 py-2 rounded text-sm transition hover:bg-tb-gray-700 hover:text-tb-green">
+                    # Tech Stack
+                </button>
+                <button class="bg-tb-gray-800 text-tb-light px-4 py-2 rounded text-sm transition hover:bg-tb-gray-700 hover:text-tb-green">
+                    # Coffee Culture
+                </button>
+                <button class="bg-tb-gray-800 text-tb-light px-4 py-2 rounded text-sm transition hover:bg-tb-gray-700 hover:text-tb-green">
+                    # Interviews
+                </button>
+                <button class="bg-tb-gray-800 text-tb-light px-4 py-2 rounded text-sm transition hover:bg-tb-gray-700 hover:text-tb-green">
+                    # AWS & Cloud
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- LATEST POSTS -->
+    <section class="pb-16 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-3xl font-bold mb-8 flex items-center">
+                <span class="text-tb-green">></span> LATEST_POSTS<span class="text-tb-gray-600">.json</span>
+            </h2>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Post 1 -->
+                <article class="bg-tb-gray-800 rounded-lg overflow-hidden border border-tb-gray-700 card-hover">
+                    <div class="h-48 bg-gradient-to-br from-tb-purple to-tb-gray-900 flex items-center justify-center">
+                        <span class="text-6xl">☕</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3 text-xs text-tb-gray-500">
+                            <span>12 Gen 2026</span>
+                            <span>•</span>
+                            <span>5 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 hover:text-tb-green transition">
+                            <a href="#">Guida ai Migliori Caffè Specialty in Zona Isola</a>
+                        </h3>
+                        <p class="text-sm text-tb-gray-400 mb-4 leading-relaxed">
+                            Tour completo delle migliori roastery e coffee shop nel quartiere. Dove trovare V60, Chemex e espresso di qualità.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#coffee</span>
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#milano</span>
+                        </div>
+                        <a href="specialty-coffee-milano-isola.html" class="text-tb-green text-sm font-bold hover:text-tb-green-dark transition">
+                            Leggi →
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Post 2 -->
+                <article class="bg-tb-gray-800 rounded-lg overflow-hidden border border-tb-gray-700 card-hover">
+                    <div class="h-48 bg-gradient-to-br from-tb-blue to-tb-gray-900 flex items-center justify-center">
+                        <span class="text-6xl">⚡</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3 text-xs text-tb-gray-500">
+                            <span>10 Gen 2026</span>
+                            <span>•</span>
+                            <span>12 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 hover:text-tb-green transition">
+                            <a href="#">Ottimizzare Produttività in Coworking: Tools & Routine</a>
+                        </h3>
+                        <p class="text-sm text-tb-gray-400 mb-4 leading-relaxed">
+                            Pomodoro timer, noise cancelling, focus music: le strategie dei developer più produttivi di TerraByte.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#productivity</span>
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#tools</span>
+                        </div>
+                        <a href="timeboxing-e-pomodoro.html" class="text-tb-green text-sm font-bold hover:text-tb-green-dark transition">
+                            Leggi →
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Post 3 -->
+                <article class="bg-tb-gray-800 rounded-lg overflow-hidden border border-tb-gray-700 card-hover">
+                    <div class="h-48 bg-gradient-to-br from-tb-blue to-tb-gray-900 flex items-center justify-center">
+                        <span class="text-6xl">💰</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3 text-xs text-tb-gray-500">
+                            <span>8 Gen 2026</span>
+                            <span>•</span>
+                            <span>7 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 hover:text-tb-green transition">
+                            <a href="#">Milano vs Remote: Costo della Vita e Qualità per Tech Worker</a>
+                        </h3>
+                        <p class="text-sm text-tb-gray-400 mb-4 leading-relaxed">
+                            Analisi comparativa tra vivere a Milano con stipendio locale vs remote work per azienda estera, tasse incluse.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#career</span>
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#finance</span>
+                        </div>
+                        <a href="milano-vs-remote.html" class="text-tb-green text-sm font-bold hover:text-tb-green-dark transition">
+                            Leggi →
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Post 4 -->
+                <article class="bg-tb-gray-800 rounded-lg overflow-hidden border border-tb-gray-700 card-hover">
+                    <div class="h-48 bg-gradient-to-br from-orange-600 to-tb-gray-900 flex items-center justify-center">
+                        <span class="text-6xl">☁️</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3 text-xs text-tb-gray-500">
+                            <span>5 Gen 2026</span>
+                            <span>•</span>
+                            <span>7 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 hover:text-tb-green transition">
+                            <a href="#">AWS Lambda Best Practices per Startup</a>
+                        </h3>
+                        <p class="text-sm text-tb-gray-400 mb-4 leading-relaxed">
+                            Cold start, concurrency limits, cost optimization e deployment sicuro in produzione. Tutto quello che devi sapere prima di andare live.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#aws</span>
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#serverless</span>
+                        </div>
+                        <a href="aws-lambda-best-practices.html" class="text-tb-green text-sm font-bold hover:text-tb-green-dark transition">
+                            Leggi →
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Post 5 -->
+                <article class="bg-tb-gray-800 rounded-lg overflow-hidden border border-tb-gray-700 card-hover">
+                    <div class="h-48 bg-gradient-to-br from-blue-600 to-tb-gray-900 flex items-center justify-center">
+                        <span class="text-6xl">💼</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3 text-xs text-tb-gray-500">
+                            <span>5 Gen 2026</span>
+                            <span>•</span>
+                            <span>7 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 hover:text-tb-green transition">
+                            <a href="#">Intervista: Sara, Full Stack Developer @ Stripe</a>
+                        </h3>
+                        <p class="text-sm text-tb-gray-400 mb-4 leading-relaxed">
+                            Da Milano al team payments globale di Stripe. Carriera, remote work e consigli per lavorare in tech company internazionali.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#interview</span>
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#career</span>
+                        </div>
+                        <a href="intervista-sara-stripe.html" class="text-tb-green text-sm font-bold hover:text-tb-green-dark transition">
+                            Leggi →
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Post 6 -->
+                <article class="bg-tb-gray-800 rounded-lg overflow-hidden border border-tb-gray-700 card-hover">
+                    <div class="h-48 bg-gradient-to-br from-red-600 to-tb-gray-900 flex items-center justify-center">
+                        <span class="text-6xl">🔒</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3 text-xs text-tb-gray-500">
+                            <span>1 Gen 2026</span>
+                            <span>•</span>
+                            <span>15 min read</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 hover:text-tb-green transition">
+                            <a href="#">AWS Security: Guida Pratica per Developer</a>
+                        </h3>
+                        <p class="text-sm text-tb-gray-400 mb-4 leading-relaxed">
+                            IAM policies, KMS encryption, Security Groups e checklist completa per infrastruttura sicura. Tutto quello che devi sapere prima di deployare in produzione.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#aws</span>
+                            <span class="text-xs bg-tb-gray-900 px-2 py-1 rounded">#security</span>
+                        </div>
+                        <a href="aws-security-guida-pratica.html" class="text-tb-green text-sm font-bold hover:text-tb-green-dark transition">
+                            Leggi →
+                        </a>
+                    </div>
+                </article>
+
+            </div>
+
+            <!-- LOAD MORE -->
+            <div class="text-center mt-12">
+                <button class="bg-tb-gray-800 hover:bg-tb-gray-700 text-tb-light px-8 py-3 rounded font-bold transition border border-tb-gray-700 hover:border-tb-green">
+                    load_more_posts()
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEWSLETTER SECTION -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="bg-gradient-to-r from-tb-green to-tb-blue p-12 rounded-xl text-center">
+                <h2 class="text-3xl font-bold mb-4 text-black">
+                    📬 Subscribe alla Newsletter
+                </h2>
+                <p class="text-black text-opacity-80 mb-6 max-w-2xl mx-auto">
+                    Ricevi gli articoli nuovi, eventi esclusivi e AWS tips direttamente nella tua inbox. Una volta a settimana, zero spam.
+                </p>
+                <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <input
+                        type="email"
+                        placeholder="dev@example.com"
+                        class="flex-1 px-4 py-3 rounded bg-white text-black font-mono focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                    <button
+                        type="submit"
+                        class="bg-black text-tb-green font-bold px-6 py-3 rounded hover:bg-tb-gray-900 transition"
+                    >
+                        subscribe()
+                    </button>
+                </form>
+                <p class="text-black text-opacity-60 text-xs mt-4">
+                    Unsubscribe in qualsiasi momento. Privacy-first.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-12 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-green-400 mb-4">TerraByte</h3>
+                    <p class="text-sm text-gray-400">Il primo Phygital Coffee per developer a Milano Isola.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="index.html" class="hover:text-green-400">Home</a></li>
+                        <li><a href="menu.html" class="hover:text-green-400">Menu</a></li>
+                        <li><a href="coworking.html" class="hover:text-green-400">Coworking</a></li>
+                        <li><a href="shop.html" class="hover:text-green-400">Shop</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Community</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                        <li><a href="#" class="hover:text-green-400">Discord</a></li>
+                        <li><a href="sustainability.html" class="hover:text-green-400">Sustainability</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contatti</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>📍 Via Pastrengo, Milano Isola</li>
+                        <li>📧 hello@terrabyte.coffee</li>
+                        <li>📱 +39 02 1234 5678</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                <p>© 2026 TerraByte Coffee. All rights reserved. | Made with ☕ & 💻 in Milano</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        // Blog filtering functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.flex.flex-wrap.gap-3 button');
+            const blogPosts = document.querySelectorAll('article');
+
+            // Filter mapping
+            const filterMap = {
+                '# All Posts': 'all',
+                '# Productivity': 'productivity',
+                '# Tech Stack': 'tech-stack',
+                '# Coffee Culture': 'coffee',
+                '# Interviews': 'interview',
+                '# AWS & Cloud': 'aws'
+            };
+
+            // Tag mapping for posts
+            function getPostTags(post) {
+                const tagElements = post.querySelectorAll('[class*="bg-tb-gray-900"]');
+                return Array.from(tagElements).map(tag => tag.textContent.toLowerCase());
+            }
+
+            // Filter posts function
+            function filterPosts(filterType) {
+                blogPosts.forEach(post => {
+                    const postTags = getPostTags(post);
+
+                    if (filterType === 'all') {
+                        post.style.display = 'block';
+                    } else if (filterType === 'productivity' && postTags.includes('#productivity')) {
+                        post.style.display = 'block';
+                    } else if (filterType === 'tech-stack' && (postTags.includes('#aws') || postTags.includes('#serverless') || postTags.includes('#security'))) {
+                        post.style.display = 'block';
+                    } else if (filterType === 'coffee' && postTags.includes('#coffee')) {
+                        post.style.display = 'block';
+                    } else if (filterType === 'interview' && postTags.includes('#interview')) {
+                        post.style.display = 'block';
+                    } else if (filterType === 'aws' && (postTags.includes('#aws') || postTags.includes('#serverless') || postTags.includes('#security'))) {
+                        post.style.display = 'block';
+                    } else {
+                        post.style.display = 'none';
+                    }
+                });
+            }
+
+            // Handle filter button clicks
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => {
+                        btn.classList.remove('bg-tb-green', 'text-black');
+                        btn.classList.add('bg-tb-gray-800', 'text-tb-light', 'hover:bg-tb-gray-700', 'hover:text-tb-green');
+                    });
+
+                    // Add active class to clicked button
+                    this.classList.remove('bg-tb-gray-800', 'text-tb-light', 'hover:bg-tb-gray-700', 'hover:text-tb-green');
+                    this.classList.add('bg-tb-green', 'text-black');
+
+                    // Get filter type and apply filter
+                    const buttonText = this.textContent.trim();
+                    const filterType = filterMap[buttonText];
+                    filterPosts(filterType);
+                });
+            });
+
+            // Set "All Posts" as default active filter
+            const allPostsButton = Array.from(filterButtons).find(btn => btn.textContent.trim() === '# All Posts');
+            if (allPostsButton) {
+                allPostsButton.classList.remove('bg-tb-gray-800', 'text-tb-light', 'hover:bg-tb-gray-700', 'hover:text-tb-green');
+                allPostsButton.classList.add('bg-tb-green', 'text-black');
+            }
+        });
+    </script>
+</body>
+</html>

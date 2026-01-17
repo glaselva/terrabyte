@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intervista: Sara, Full Stack Developer @ Stripe | TerraByte Blog</title>
+    <meta name="description" content="Intervista esclusiva con Sara, sviluppatrice full-stack italiana che lavora da remoto per Stripe. Carriera, tech stack, remote work e consigli per chi vuole lavorare in tech company globali.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tb-dark': '#1e1e1e',
+                        'tb-gray-900': '#2D3436',
+                        'tb-gray-800': '#394042',
+                        'tb-gray-700': '#4a5254',
+                        'tb-gray-600': '#636e72',
+                        'tb-gray-400': '#b2bec3',
+                        'tb-light': '#E0E0E0',
+                        'tb-green': '#00B894',
+                        'tb-green-dark': '#00a080',
+                        'tb-purple': '#D6A2E8',
+                        'tb-blue': '#0984e3',
+                    },
+                    fontFamily: {
+                        'mono': ['Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                @apply bg-gradient-to-br from-tb-dark to-tb-gray-900 text-tb-light font-mono min-h-screen;
+            }
+
+            /* Scrollbar */
+            ::-webkit-scrollbar {
+                width: 10px;
+                background: #2D3436;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #394042;
+                border: 1px solid #00B894;
+                border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #00B894;
+            }
+        }
+
+        @layer components {
+            /* Animazioni */
+            @keyframes blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+
+            .cursor-blink {
+                animation: blink 1s step-end infinite;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.6s ease-in;
+            }
+
+            /* Card hover effect */
+            .card-hover {
+                @apply transition-all duration-300;
+            }
+
+            .card-hover:hover {
+                @apply -translate-y-1;
+                box-shadow: 0 10px 30px rgba(0, 184, 148, 0.2);
+            }
+
+            /* Border glow */
+            .border-glow-green:hover {
+                box-shadow: 0 0 20px rgba(0, 184, 148, 0.4);
+            }
+
+            /* Article specific styles */
+            .article-content {
+                @apply text-tb-light leading-relaxed;
+            }
+
+            .article-content h2 {
+                @apply text-2xl font-bold text-tb-green mb-4 mt-8;
+            }
+
+            .article-content h3 {
+                @apply text-xl font-bold text-tb-green mb-3 mt-6;
+            }
+
+            .article-content h4 {
+                @apply text-lg font-bold text-tb-purple mb-2 mt-4;
+            }
+
+            .article-content p {
+                @apply mb-4;
+            }
+
+            .article-content ul {
+                @apply mb-6 ml-6;
+            }
+
+            .article-content li {
+                @apply mb-2;
+            }
+
+            .article-content strong {
+                @apply text-tb-green font-bold;
+            }
+
+            .article-content em {
+                @apply text-tb-purple italic;
+            }
+
+            .code-block {
+                @apply bg-tb-gray-900 p-4 rounded border border-tb-gray-700 font-mono text-sm mb-4 overflow-x-auto;
+            }
+
+            /* Interview quote styling */
+            .interview-quote {
+                @apply border-l-4 border-tb-green pl-6 py-4 my-6 bg-tb-gray-800/50 rounded-r-lg italic;
+            }
+
+            .interview-quote::before {
+                content: '"';
+                @apply text-4xl text-tb-green font-serif;
+                position: relative;
+                top: -10px;
+                left: -20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CART OVERLAY -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- CART PANEL -->
+    <div id="cart-panel" class="fixed top-0 right-0 h-full w-96 max-w-full bg-gradient-to-b from-tb-gray-900 to-tb-dark shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col border-l-2 border-tb-green">
+        <div class="p-6 border-b border-tb-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-tb-green">CART.log</h2>
+            <button id="close-cart" class="text-tb-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-3">
+            <p id="empty-cart-msg" class="text-tb-gray-600 text-center mt-10">[NULL] Cart is empty.<br>Select items to compile.</p>
+        </div>
+
+        <div class="p-6 border-t border-tb-gray-800 bg-tb-gray-900">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-tb-gray-400">TOTAL:</span>
+                <span id="cart-total" class="text-2xl font-bold text-tb-green">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-tb-green hover:bg-tb-green-dark text-black font-bold py-3 rounded transition-all duration-200 transform hover:scale-105">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVIGATION BAR -->
+    <nav class="fixed top-0 w-full bg-gray-900 bg-opacity-95 backdrop-blur-sm z-30 border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-green-400"><span class="text-highlight"><</span>TerraByte<span class="text-highlight">/></span></a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="index.html" class="text-gray-300 hover:text-green-400 transition">./home</a>
+                <a href="menu.html" class="text-gray-300 hover:text-green-400 transition">./menu</a>
+                <a href="shop.html" class="text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+                <a href="coworking.html" class="text-gray-300 hover:text-green-400 transition">./coworking</a>
+                <a href="events.html" class="text-gray-300 hover:text-green-400 transition">./events</a>
+                <a href="blog.html" class="text-green-400 font-bold transition">./blog</a>
+                <a href="sustainability.html" class="text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+                <a href="coworking.html#book" class="bg-green-500 hover:bg-green-600 text-black font-bold px-4 py-2 rounded transition transform hover:scale-105">
+                    Prenota_Desk()
+                </a>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden px-6 pb-4 space-y-2">
+            <a href="index.html" class="block text-gray-300 hover:text-green-400 transition">./home</a>
+            <a href="menu.html" class="block text-gray-300 hover:text-green-400 transition">./menu</a>
+            <a href="shop.html" class="block text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+            <a href="coworking.html" class="block text-gray-300 hover:text-green-400 transition">./coworking</a>
+            <a href="events.html" class="block text-gray-300 hover:text-green-400 transition">./events</a>
+            <a href="blog.html" class="block text-green-400 font-bold transition">./blog</a>
+            <a href="sustainability.html" class="block text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+        </div>
+    </nav>
+
+    <!-- ARTICLE HEADER -->
+    <section class="pt-32 pb-16 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="mb-8">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-tb-gray-500 text-sm">• 5 Gen 2026 • 7 min read</span>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                    Intervista: Sara, Full Stack Developer @ Stripe
+                </h1>
+                <p class="text-xl text-tb-gray-400 max-w-2xl">
+                    Da Milano al team payments globale di Stripe. Carriera, remote work e consigli per lavorare in tech company internazionali.
+                </p>
+            </div>
+
+            <!-- Article Meta -->
+            <div class="flex flex-wrap gap-2 mb-8">
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#interview</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#career</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#stripe</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#remote-work</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#global-tech</span>
+            </div>
+
+            <!-- Back to Blog -->
+            <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                ← Back to Blog
+            </a>
+        </div>
+    </section>
+
+    <!-- ARTICLE CONTENT -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <article class="article-content">
+
+                <h2>Introduzione: da Milano al team payments globale di Stripe</h2>
+                <p>Sara è una sviluppatrice full-stack italiana di 29 anni che lavora da remoto per Stripe, una delle tech company più innovative nel settore fintech. Dopo esperienze in startup milanesi e una breve parentesi in Irlanda, è tornata in Italia mantenendo il ruolo in Stripe grazie alla politica remote-first dell'azienda. L'abbiamo intervistata per capire come si lavora in un'organizzazione distribuita globalmente, quali sfide comporta e come organizza le sue giornate tra fusi orari, code review e deploy in produzione.</p>
+
+                <h2>Il percorso: da bootcamp a Stripe</h2>
+
+                <h3>Come sei arrivata in Stripe?</h3>
+                <div class="interview-quote">
+                    "Ho iniziato con un bootcamp di web development a Milano nel 2019. Prima lavoravo in un'agenzia di comunicazione ma sentivo che non era la mia strada. Dopo il bootcamp ho fatto sei mesi in una startup fintech italiana come junior developer, poi sono passata a una scale-up irlandese dove ho lavorato su React e Node.js per due anni. Nel 2023 ho applicato a Stripe durante una fase di hiring per il team europeo. Il processo è stato lungo—sette colloqui tra coding challenge, system design e behavioral—ma molto ben strutturato. Mi hanno offerto il ruolo di Full Stack Engineer II e da allora lavoro full-remote dall'Italia."
+                </div>
+
+                <h3>Cosa ti ha convinto a scegliere Stripe rispetto ad altre offerte?</h3>
+                <div class="interview-quote">
+                    "Tre fattori: la qualità tecnica del team, l'impatto del prodotto—lavorare su infrastruttura di pagamento che usano milioni di business—e la remote culture matura. Non è 'remote perché c'è la pandemia', è proprio nel DNA dell'azienda. Hanno processi chiari, documentazione eccellente e nessuno ti chiede perché non sei in ufficio."
+                </div>
+
+                <h2>Tech stack e architettura</h2>
+
+                <h3>Su cosa lavori quotidianamente?</h3>
+                <div class="interview-quote">
+                    "Sono nel team che gestisce parte della dashboard merchant—l'interfaccia che i clienti Stripe usano per vedere transazioni, configurare webhook, gestire dispute. Lato frontend usiamo React con TypeScript, Redux per state management e un design system interno molto maturo. Backend è principalmente Ruby (Rails-based) con alcuni servizi in Go per componenti ad alta performance. Database PostgreSQL con Redis per caching. Deploy su AWS con Kubernetes."
+                </div>
+
+                <h3>Come gestite la scalabilità con milioni di merchant?</h3>
+                <div class="interview-quote">
+                    "Stripe processa centinaia di milioni di richieste API al giorno, quindi tutto è progettato per scale. Sul frontend usiamo lazy loading aggressivo, code splitting e CDN globale per asset statici. Backend ha microservizi con auto-scaling, circuit breaker per chiamate verso servizi esterni e monitoring real-time su latenza e error rate. Ogni deploy passa per canary release—prima 1%, poi 10%, poi 100% del traffico—con rollback automatico se le metriche si degradano."
+                </div>
+
+                <h3>Tool di sviluppo quotidiani?</h3>
+                <div class="interview-quote">
+                    "VS Code con extension pack interno Stripe, GitHub per version control, Slack per comunicazione asincrona, Zoom per sync meeting. Usiamo Linear per issue tracking—molto più veloce di Jira—e Notion per documentazione di team. Per monitoring: Datadog e un sistema interno di observability basato su OpenTelemetry."
+                </div>
+
+                <h2>Remote work: organizzazione e fusi orari</h2>
+
+                <h3>Come gestisci il lavoro con team distribuiti in più timezone?</h3>
+                <div class="interview-quote">
+                    "Il mio team ha persone in Europa (Dublino, Berlino, Lisbona), US West Coast e un paio in APAC. Abbiamo una finestra di overlap di 3-4 ore al giorno (mattina Pacific Time, pomeriggio Europa) dove facciamo meeting sincroni. Il resto del lavoro è asincrono: code review su GitHub, discussioni tecniche su thread Slack, design doc condivisi. Stripe ha una forte cultura di 'write things down'—tutto è documentato, niente si decide solo in call senza follow-up scritto."
+                </div>
+
+                <h3>Routine quotidiana tipo?</h3>
+                <div class="interview-quote">
+                    "Mi sveglio alle 7:30, colazione e un po' di stretching. Inizio a lavorare verso le 9:00 con 1-2 ore di deep work: implemento feature, fix bug, scrivo test. Verso le 11:00 iniziano gli stand-up e i sync meeting con il team (per loro è mattina presto California). Pranzo verso le 13:00, poi pomeriggio dedicato a code review, pair programming remoto e refinement di ticket. Verso le 17:00-18:00 chiudo, a meno di deploy critici o incident response—abbiamo on-call rotation settimanale."
+                </div>
+
+                <h3>Come mantieni separazione tra lavoro e vita personale lavorando da casa?</h3>
+                <div class="interview-quote">
+                    "Ho uno studio dedicato—quando esco da quella stanza, il lavoro finisce. Niente notifiche Slack dopo le 18:00 tranne se sono on-call. Stripe è molto rispettosa del work-life balance, non c'è cultura del 'always on'. Anzi, ci incoraggiano a prendere PTO regolarmente—io faccio 4-5 settimane l'anno tra ferie e giorni personali."
+                </div>
+
+                <h2>Cultura aziendale e crescita professionale</h2>
+
+                <h3>Come descriveresti la cultura di Stripe?</h3>
+                <div class="interview-quote">
+                    "Molto data-driven e orientata all'impatto. Ogni progetto parte da un design doc dove spieghi il problema, proponi soluzioni, analizzi trade-off. Poi ricevi feedback da altri team, iteriamo, e solo dopo inizia l'implementazione. Sembra lento ma in realtà previene errori costosi e allinea tutti sulla direzione. C'è molta ownership—se inizi un progetto, sei responsabile fino al deploy e monitoring post-launch. E c'è zero tolleranza per brilliance jerk: non importa quanto sei bravo tecnicamente, se non collabori bene sei fuori."
+                </div>
+
+                <h3>Opportunità di crescita?</h3>
+                <div class="interview-quote">
+                    "Stripe ha career ladder chiaro—IC (Individual Contributor) da I a VII e manager track parallelo. Ogni livello ha aspettative esplicite su scope, autonomia e leadership. Faccio regolarmente 1:1 con il mio manager dove discutiamo obiettivi, progetti stretch e aree di sviluppo. Abbiamo budget per conferenze, corsi online e libri tecnici. Io sto studiando system design avanzato perché voglio passare a Senior Engineer (IC III) entro fine anno."
+                </div>
+
+                <h2>Consigli per developer che vogliono lavorare in tech company globali</h2>
+
+                <h3>Cosa consiglieresti a chi vuole fare un percorso simile?</h3>
+                <div class="interview-quote">
+                    "Primo: costruisci fondamenta solide. Le tech company top valutano molto algoritmi, data structure e system design—non basta saper usare un framework. Fai LeetCode, leggi 'Designing Data-Intensive Applications', studia come scalano i grandi sistemi. Secondo: contribuisci a open source o side project pubblici—serve per dimostrare capacità di lavorare in team distribuiti e di scrivere codice pulito. Terzo: impara a comunicare in modo asincrono—scrivi design doc chiari, commenti utili nelle PR, documentazione leggibile. Nelle remote company è fondamentale."
+                </div>
+
+                <h3>Competenze tecniche più richieste?</h3>
+                <div class="interview-quote">
+                    "TypeScript è ormai standard per frontend serio. Saper lavorare con database relazionali e capire query optimization. Conoscere Docker e Kubernetes almeno a livello base. Capire observability—logging, metrics, tracing—perché debugging in produzione è diverso da debug in locale. E soft skill: saper dare e ricevere feedback costruttivo, scrivere bene in inglese, gestire autonomamente il proprio tempo."
+                </div>
+
+                <h3>Errori da evitare?</h3>
+                <div class="interview-quote">
+                    "Non applicare solo alle FAANG—ci sono tantissime tech company eccellenti meno conosciute. Non sottovalutare il culture fit—un'azienda tecnicamente forte ma con cultura tossica ti farà odiare il lavoro. E soprattutto: non smettere mai di imparare. Il tech cambia velocissimo, chi si ferma è tagliato fuori in 2-3 anni."
+                </div>
+
+                <h2>Riflessioni finali: il futuro del remote work in tech</h2>
+
+                <h3>Pensi che il remote work resterà la norma?</h3>
+                <div class="interview-quote">
+                    "Per le tech company sì, almeno per ruoli engineering. Le aziende hanno capito che possono assumere talenti ovunque nel mondo invece di competere solo su San Francisco o Londra. Certo, serve maturità organizzativa—non puoi fare 'ufficio ma da remoto', devi ripensare processi, comunicazione, onboarding. Ma chi lo fa bene ha un vantaggio competitivo enorme. Io non tornerei mai a un lavoro full-office."
+                </div>
+
+                <h3>Un messaggio per developer italiani che pensano di non poter competere a livello globale?</h3>
+                <div class="interview-quote">
+                    "L'Italia sforna ottimi ingegneri, il problema è spesso la mancanza di esposizione a contesti internazionali e stipendi bassi che demotivano. Ma con remote work queste barriere cadono. Puoi lavorare per Stripe, GitHub, Shopify vivendo a Milano, Bologna o Bari. Serve investire su inglese tecnico, networking su Twitter/LinkedIn, e candidarsi anche se non hai tutti i requisiti—il peggio che può succedere è un no. Vale assolutamente la pena provarci."
+                </div>
+
+                <p>Ringraziamo Sara per aver condiviso la sua esperienza. Se lavori in una tech company globale e vuoi raccontare la tua storia, scrivici a hello@terrabyte.coffee.</p>
+
+                <!-- Article Footer -->
+                <div class="mt-12 pt-8 border-t border-tb-gray-700">
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#interview</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#career</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#stripe</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#remote-work</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#global-tech</span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                            ← Back to Blog
+                        </a>
+
+                        <!-- Share buttons could go here -->
+                        <div class="text-tb-gray-500 text-sm">
+                            Share this article
+                        </div>
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </section>
+
+    <!-- NEWSLETTER SECTION -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="bg-gradient-to-r from-tb-green to-tb-blue p-12 rounded-xl text-center">
+                <h2 class="text-3xl font-bold mb-4 text-black">
+                    📬 Subscribe alla Newsletter
+                </h2>
+                <p class="text-black text-opacity-80 mb-6 max-w-2xl mx-auto">
+                    Ricevi gli articoli nuovi, eventi esclusivi e AWS tips direttamente nella tua inbox. Una volta a settimana, zero spam.
+                </p>
+                <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <input
+                        type="email"
+                        placeholder="dev@example.com"
+                        class="flex-1 px-4 py-3 rounded bg-white text-black font-mono focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                    <button
+                        type="submit"
+                        class="bg-black text-tb-green font-bold px-6 py-3 rounded hover:bg-tb-gray-900 transition"
+                    >
+                        subscribe()
+                    </button>
+                </form>
+                <p class="text-black text-opacity-60 text-xs mt-4">
+                    Unsubscribe in qualsiasi momento. Privacy-first.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-12 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-green-400 mb-4">TerraByte</h3>
+                    <p class="text-sm text-gray-400">Il primo Phygital Coffee per developer a Milano Isola.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="index.html" class="hover:text-green-400">Home</a></li>
+                        <li><a href="menu.html" class="hover:text-green-400">Menu</a></li>
+                        <li><a href="shop.html" class="hover:text-green-400">Shop</a></li>
+                        <li><a href="coworking.html" class="hover:text-green-400">Coworking</a></li>
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Community</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                        <li><a href="#" class="hover:text-green-400">Discord</a></li>
+                        <li><a href="sustainability.html" class="hover:text-green-400">Sustainability</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contatti</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>📍 Via Pastrengo, Milano Isola</li>
+                        <li>📧 hello@terrabyte.coffee</li>
+                        <li>📱 +39 02 1234 5678</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                <p>© 2026 TerraByte Coffee. All rights reserved. | Made with ☕ & 💻 in Milano</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

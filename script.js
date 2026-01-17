@@ -206,27 +206,22 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(typeWriter, 500);
     }
 
- // 5. Mobile Menu Toggle
+    // B. Navbar Active State -> RIMOSSO (Navbar neutra)
+
+    // C. Mobile Menu Toggle
     const menuBtn = document.getElementById('mobile-menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
 
     if (menuBtn && mobileMenu) {
         menuBtn.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
-            if (mobileMenu.classList.contains('hidden')) {
-                menuBtn.innerHTML = '&#9776;';
-            } else {
-                menuBtn.innerHTML = '&times;';
-            }
         });
 
         mobileMenu.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => {
                 mobileMenu.classList.add('hidden');
-                menuBtn.innerHTML = '&#9776;';
             });
         });
     }
 
 }); // END DOMContentLoaded
-

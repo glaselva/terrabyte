@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milano vs Remote: Costo della Vita e Qualità per Tech Worker | TerraByte Blog</title>
+    <meta name="description" content="Analisi comparativa tra stipendi tech a Milano e remote work per aziende estere. Costo della vita, tasse, qualità urbana: quale scelta per developer italiani nel 2026.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tb-dark': '#1e1e1e',
+                        'tb-gray-900': '#2D3436',
+                        'tb-gray-800': '#394042',
+                        'tb-gray-700': '#4a5254',
+                        'tb-gray-600': '#636e72',
+                        'tb-gray-400': '#b2bec3',
+                        'tb-light': '#E0E0E0',
+                        'tb-green': '#00B894',
+                        'tb-green-dark': '#00a080',
+                        'tb-purple': '#D6A2E8',
+                        'tb-blue': '#0984e3',
+                    },
+                    fontFamily: {
+                        'mono': ['Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                @apply bg-gradient-to-br from-tb-dark to-tb-gray-900 text-tb-light font-mono min-h-screen;
+            }
+
+            /* Scrollbar */
+            ::-webkit-scrollbar {
+                width: 10px;
+                background: #2D3436;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #394042;
+                border: 1px solid #00B894;
+                border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #00B894;
+            }
+        }
+
+        @layer components {
+            /* Animazioni */
+            @keyframes blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+
+            .cursor-blink {
+                animation: blink 1s step-end infinite;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.6s ease-in;
+            }
+
+            /* Card hover effect */
+            .card-hover {
+                @apply transition-all duration-300;
+            }
+
+            .card-hover:hover {
+                @apply -translate-y-1;
+                box-shadow: 0 10px 30px rgba(0, 184, 148, 0.2);
+            }
+
+            /* Border glow */
+            .border-glow-green:hover {
+                box-shadow: 0 0 20px rgba(0, 184, 148, 0.4);
+            }
+
+            /* Article specific styles */
+            .article-content {
+                @apply text-tb-light leading-relaxed;
+            }
+
+            .article-content h2 {
+                @apply text-2xl font-bold text-tb-green mb-4 mt-8;
+            }
+
+            .article-content h3 {
+                @apply text-xl font-bold text-tb-green mb-3 mt-6;
+            }
+
+            .article-content h4 {
+                @apply text-lg font-bold text-tb-purple mb-2 mt-4;
+            }
+
+            .article-content p {
+                @apply mb-4;
+            }
+
+            .article-content ul {
+                @apply mb-6 ml-6;
+            }
+
+            .article-content li {
+                @apply mb-2;
+            }
+
+            .article-content strong {
+                @apply text-tb-green font-bold;
+            }
+
+            .article-content em {
+                @apply text-tb-purple italic;
+            }
+
+            .code-block {
+                @apply bg-tb-gray-900 p-4 rounded border border-tb-gray-700 font-mono text-sm mb-4 overflow-x-auto;
+            }
+
+            /* Comparison table */
+            .comparison-table {
+                @apply w-full border-collapse border border-tb-gray-700 mb-6;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                @apply border border-tb-gray-700 p-3 text-left;
+            }
+
+            .comparison-table th {
+                @apply bg-tb-gray-800 text-tb-green font-bold;
+            }
+
+            .comparison-table tr:nth-child(even) {
+                @apply bg-tb-gray-900/30;
+            }
+
+            /* Budget breakdown */
+            .budget-breakdown {
+                @apply bg-tb-gray-800/50 p-4 rounded-lg border border-tb-gray-700 mb-6;
+            }
+
+            .budget-item {
+                @apply flex justify-between items-center py-2 border-b border-tb-gray-700/50;
+            }
+
+            .budget-item:last-child {
+                @apply border-b-0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CART OVERLAY -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- CART PANEL -->
+    <div id="cart-panel" class="fixed top-0 right-0 h-full w-96 max-w-full bg-gradient-to-b from-tb-gray-900 to-tb-dark shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col border-l-2 border-tb-green">
+        <div class="p-6 border-b border-tb-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-tb-green">CART.log</h2>
+            <button id="close-cart" class="text-tb-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-3">
+            <p id="empty-cart-msg" class="text-tb-gray-600 text-center mt-10">[NULL] Cart is empty.<br>Select items to compile.</p>
+        </div>
+
+        <div class="p-6 border-t border-tb-gray-800 bg-tb-gray-900">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-tb-gray-400">TOTAL:</span>
+                <span id="cart-total" class="text-2xl font-bold text-tb-green">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-tb-green hover:bg-tb-green-dark text-black font-bold py-3 rounded transition-all duration-200 transform hover:scale-105">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVIGATION BAR -->
+    <nav class="fixed top-0 w-full bg-gray-900 bg-opacity-95 backdrop-blur-sm z-30 border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-green-400"><span class="text-highlight"><</span>TerraByte<span class="text-highlight">/></span></a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="index.html" class="text-gray-300 hover:text-green-400 transition">./home</a>
+                <a href="menu.html" class="text-gray-300 hover:text-green-400 transition">./menu</a>
+                <a href="shop.html" class="text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+                <a href="coworking.html" class="text-gray-300 hover:text-green-400 transition">./coworking</a>
+                <a href="events.html" class="text-gray-300 hover:text-green-400 transition">./events</a>
+                <a href="blog.html" class="text-green-400 font-bold transition">./blog</a>
+                <a href="sustainability.html" class="text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+                <a href="coworking.html#book" class="bg-green-500 hover:bg-green-600 text-black font-bold px-4 py-2 rounded transition transform hover:scale-105">
+                    Prenota_Desk()
+                </a>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden px-6 pb-4 space-y-2">
+            <a href="index.html" class="block text-gray-300 hover:text-green-400 transition">./home</a>
+            <a href="menu.html" class="block text-gray-300 hover:text-green-400 transition">./menu</a>
+            <a href="shop.html" class="block text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+            <a href="coworking.html" class="block text-gray-300 hover:text-green-400 transition">./coworking</a>
+            <a href="events.html" class="block text-gray-300 hover:text-green-400 transition">./events</a>
+            <a href="blog.html" class="block text-green-400 font-bold transition">./blog</a>
+            <a href="sustainability.html" class="block text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+        </div>
+    </nav>
+
+    <!-- ARTICLE HEADER -->
+    <section class="pt-32 pb-16 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="mb-8">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-tb-gray-500 text-sm">• 8 Gen 2026 • 7 min read</span>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                    Milano vs Remote: Costo della Vita e Qualità per Tech Worker
+                </h1>
+                <p class="text-xl text-tb-gray-400 max-w-2xl">
+                    Analisi comparativa tra stipendi tech a Milano e remote work per aziende estere. Tasse, risparmio, qualità urbana: quale scelta per developer italiani nel 2026.
+                </p>
+            </div>
+
+            <!-- Article Meta -->
+            <div class="flex flex-wrap gap-2 mb-8">
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#career</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#finance</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#milano</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#remote-work</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#salaries</span>
+            </div>
+
+            <!-- Back to Blog -->
+            <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                ← Back to Blog
+            </a>
+        </div>
+    </section>
+
+    <!-- ARTICLE CONTENT -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <article class="article-content">
+
+                <h2>Introduzione: il dilemma del developer italiano</h2>
+                <p>Un developer italiano con 3-5 anni di esperienza si trova davanti a una scelta: accettare un ruolo in azienda milanese con stipendio locale (€40-50k lordi) o lavorare da remoto per un'azienda estera mantenendo la residenza in Italia (€60-80k+ lordi). La seconda opzione sembra ovviamente migliore, ma tasse italiane, costo della vita e qualità urbana rendono il calcolo più complesso di quanto sembri.</p>
+
+                <h2>Stipendi tech a Milano: quanto si guadagna davvero</h2>
+
+                <h3>Range salariali per ruolo</h3>
+                <p>Secondo dati aggiornati al 2026, gli stipendi tech a Milano sono significativamente più bassi rispetto ad altre capitali europee:</p>
+
+                <h4>Developer / Software Engineer:</h4>
+                <ul>
+                    <li>Entry level: €30-38k lordi annui</li>
+                    <li>Mid level: €38-50k lordi</li>
+                    <li>Senior: €50-65k+ lordi</li>
+                    <li>Media milanese: €36-38k, con 75° percentile a €46-48k</li>
+                </ul>
+
+                <h4>DevOps / Platform Engineer:</h4>
+                <ul>
+                    <li>Entry: €40-47k</li>
+                    <li>Mid: €47-56k</li>
+                    <li>Senior: €56-70k</li>
+                    <li>Media: €46-66k a seconda dell'ambiente cloud</li>
+                </ul>
+
+                <h4>Data Scientist:</h4>
+                <ul>
+                    <li>Entry: €32-38k</li>
+                    <li>Mid: €38-46k</li>
+                    <li>Senior: €46-60k</li>
+                    <li>Media: €37-38k, quartile superiore €44-55k</li>
+                </ul>
+
+                <h3>Confronto europeo</h3>
+                <p>Milano risulta tra le città più economiche per assumere developer in Europa:</p>
+
+                <ul>
+                    <li>Milano: ~$76,000/anno costo aziendale totale</li>
+                    <li>Berlino: ~$102,000</li>
+                    <li>Parigi: ~$115,000</li>
+                    <li>Londra: ~$104,000</li>
+                    <li>Tallinn: ~$35,000</li>
+                </ul>
+
+                <p>Un senior engineer a Milano guadagna mediamente €36-38k, mentre a Parigi o Berlino lo stesso profilo riceve €60-80k.</p>
+
+                <h2>Costo della vita a Milano: spese mensili realistiche</h2>
+
+                <h3>Budget single person (dati gennaio 2026)</h3>
+                <p>Secondo Numbeo, il costo mensile stimato per una persona singola a Milano è di circa €1,182 escludendo affitto.</p>
+
+                <h4>Breakdown dettagliato:</h4>
+
+                <h5>Abitazione:</h5>
+                <ul>
+                    <li>Monolocale centro: €1,000-1,400/mese</li>
+                    <li>Monolocale periferia/Isola: €700-1,000/mese</li>
+                    <li>Bilocale centro: €1,400-1,900/mese</li>
+                    <li>Stanza in condivisione: €500-750/mese</li>
+                </ul>
+
+                <h5>Trasporti:</h5>
+                <ul>
+                    <li>Abbonamento ATM mensile: €39</li>
+                    <li>Bike sharing/monopattino: €20-40/mese</li>
+                    <li>Benzina (se auto): €100-150/mese</li>
+                </ul>
+
+                <h5>Alimentazione:</h5>
+                <ul>
+                    <li>Spesa supermercato: €250-350/mese</li>
+                    <li>Pranzi fuori occasionali: €150-200/mese</li>
+                    <li>Caffè/aperitivi: €80-120/mese</li>
+                </ul>
+
+                <h5>Altro:</h5>
+                <ul>
+                    <li>Palestra: €40-70/mese</li>
+                    <li>Utenze (luce, gas, internet): €120-180/mese</li>
+                    <li>Telefono: €15-25/mese</li>
+                    <li>Intrattenimento: €100-150/mese</li>
+                </ul>
+
+                <p>Totale mensile realistico: €1,800-2,500 a seconda di scelte abitative e lifestyle.</p>
+
+                <h2>Scenario 1: Tech worker con stipendio locale Milano</h2>
+
+                <h3>Profilo: Mid-level developer, azienda italiana</h3>
+                <p>Stipendio lordo annuo: €45,000<br>
+                Stipendio netto mensile: ~€2,500 (dopo IRPEF, contributi, addizionali regionali/comunali)</p>
+
+                <h4>Sistema fiscale italiano:</h4>
+                <ul>
+                    <li>Aliquota IRPEF progressiva (23% fino €15k, 35% fino €50k, 43% oltre €50k)</li>
+                    <li>Addizionale regionale Lombardia: ~1.5-1.8%</li>
+                    <li>Addizionale comunale Milano: ~0.8%</li>
+                    <li>Contributi previdenziali INPS: ~9.19%</li>
+                </ul>
+
+                <div class="budget-breakdown">
+                    <h4 class="text-tb-green font-bold mb-3">Budget mensile:</h4>
+                    <div class="budget-item">
+                        <span>Netto in tasca</span>
+                        <span class="text-tb-green font-bold">€2,500</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Affitto monolocale Isola</span>
+                        <span class="text-red-400">-€900</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Spese fisse (utenze, abbonamento, telefono)</span>
+                        <span class="text-red-400">-€180</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Alimentazione + caffè</span>
+                        <span class="text-red-400">-€450</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Trasporti</span>
+                        <span class="text-red-400">-€50</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Palestra/wellness</span>
+                        <span class="text-red-400">-€50</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Intrattenimento/uscite</span>
+                        <span class="text-red-400">-€150</span>
+                    </div>
+                    <div class="budget-item border-t border-tb-gray-600 pt-2">
+                        <span class="font-bold">Residuo mensile</span>
+                        <span class="text-tb-green font-bold">€720</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Capacità di risparmio annuale</span>
+                        <span class="text-tb-green font-bold">€8,640 (~19% dello stipendio netto)</span>
+                    </div>
+                </div>
+
+                <h4>Pro e contro</h4>
+
+                <h5>Vantaggi:</h5>
+                <ul>
+                    <li>Contesto urbano stimolante con eventi tech, meetup, networking di persona</li>
+                    <li>Qualità della vita milanese: cultura, food, aperitivi, scena sociale</li>
+                    <li>Career growth tramite community locale e possibilità di job hopping tra aziende fisiche</li>
+                </ul>
+
+                <h5>Svantaggi:</h5>
+                <ul>
+                    <li>Stipendio inferiore alla media europea per stesso ruolo (-30-40% vs Berlino/Parigi)</li>
+                    <li>Crescita salariale lenta rispetto a mercati esteri più dinamici</li>
+                    <li>Affitti alti rispetto al potere d'acquisto</li>
+                </ul>
+
+                <h2>Scenario 2: Remote worker per azienda estera, residente Italia</h2>
+
+                <h3>Profilo: Mid-level developer, azienda EU/US</h3>
+                <p>Stipendio lordo annuo: €70,000 (contratto estero)<br>
+                Regime fiscale: Dipendente estero con residenza fiscale italiana</p>
+
+                <h4>Tassazione italiana su reddito estero:</h4>
+                <ul>
+                    <li>IRPEF progressiva: aliquota effettiva ~35-38% sul totale</li>
+                    <li>Addizionali regionali/comunali: ~2.5%</li>
+                    <li>Netto mensile stimato: ~€3,800-4,000</li>
+                </ul>
+
+                <div class="budget-breakdown">
+                    <h4 class="text-tb-green font-bold mb-3">Budget mensile:</h4>
+                    <div class="budget-item">
+                        <span>Netto in tasca</span>
+                        <span class="text-tb-green font-bold">€4,000</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Affitto bilocale Isola (più spazio per home office)</span>
+                        <span class="text-red-400">-€1,200</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Spese fisse</span>
+                        <span class="text-red-400">-€200</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Alimentazione + caffè specialty</span>
+                        <span class="text-red-400">-€500</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Trasporti ridotti (più WFH)</span>
+                        <span class="text-red-400">-€30</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Coworking occasionale</span>
+                        <span class="text-red-400">-€100</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Palestra</span>
+                        <span class="text-red-400">-€60</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Intrattenimento/viaggi</span>
+                        <span class="text-red-400">-€300</span>
+                    </div>
+                    <div class="budget-item border-t border-tb-gray-600 pt-2">
+                        <span class="font-bold">Residuo mensile</span>
+                        <span class="text-tb-green font-bold">€1,610</span>
+                    </div>
+                    <div class="budget-item">
+                        <span>Capacità di risparmio annuale</span>
+                        <span class="text-tb-green font-bold">€19,320 (~40% dello stipendio netto)</span>
+                    </div>
+                </div>
+
+                <h4>Incentivi fiscali disponibili</h4>
+
+                <h5>Digital Nomad Visa (2024) + regime Impatriati (limitato):</h5>
+                <ul>
+                    <li>Italia ha introdotto Digital Nomad Visa per lavoratori remoti non-EU</li>
+                    <li>Regime Impatriati: riduzione del 70% del reddito imponibile per chi rientra in Italia dopo 2+ anni all'estero (requisiti stringenti)</li>
+                    <li>Proposta 2025: flat tax per digital nomad simile a Portogallo/Spagna (in discussione)</li>
+                </ul>
+
+                <h5>Res Non Dom (high net worth):</h5>
+                <ul>
+                    <li>Flat tax €100k/anno su redditi esteri, ma richiede patrimonio elevato—non accessibile alla maggior parte dei tech worker</li>
+                </ul>
+
+                <h2>Confronto diretto: Milano locale vs Remote estero</h2>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Voce</th>
+                            <th>Milano Locale</th>
+                            <th>Remote Estero</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>RAL lorda</td>
+                            <td>€45,000</td>
+                            <td>€70,000</td>
+                        </tr>
+                        <tr>
+                            <td>Netto mensile</td>
+                            <td>€2,500</td>
+                            <td>€4,000</td>
+                        </tr>
+                        <tr>
+                            <td>Affitto</td>
+                            <td>€900 (monolocale)</td>
+                            <td>€1,200 (bilocale)</td>
+                        </tr>
+                        <tr>
+                            <td>Spese mensili totali</td>
+                            <td>€1,780</td>
+                            <td>€2,390</td>
+                        </tr>
+                        <tr>
+                            <td>Risparmio mensile</td>
+                            <td>€720</td>
+                            <td>€1,610</td>
+                        </tr>
+                        <tr>
+                            <td>Risparmio annuo</td>
+                            <td>€8,640</td>
+                            <td>€19,320</td>
+                        </tr>
+                        <tr>
+                            <td>Networking locale</td>
+                            <td>Alto</td>
+                            <td>Medio</td>
+                        </tr>
+                        <tr>
+                            <td>Flessibilità geografica</td>
+                            <td>Bassa</td>
+                            <td>Alta</td>
+                        </tr>
+                        <tr>
+                            <td>Crescita salariale</td>
+                            <td>Limitata</td>
+                            <td>Più rapida</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Qualità della vita: fattori oltre lo stipendio</h2>
+
+                <h3>Vantaggi di vivere a Milano (indipendentemente da contratto)</h3>
+                <ul>
+                    <li>Scena tech attiva: meetup, conferenze, hackathon, community di developer</li>
+                    <li>Cultura e lifestyle: musei, concerti, design week, aperitivi, ristoranti di qualità</li>
+                    <li>Networking spontaneo: incontrare persone in coworking, eventi, coffee shop specialty</li>
+                    <li>Servizi urbani: trasporti pubblici efficienti, bike sharing, prossimità a tutto</li>
+                </ul>
+
+                <h3>Sfide del remote puro</h3>
+                <ul>
+                    <li>Isolamento sociale: meno occasioni di networking face-to-face, rischio burnout</li>
+                    <li>Fusi orari: se lavori per US West Coast, meeting serali frequenti</li>
+                    <li>Meno visibilità interna: promozioni più lente rispetto a colleghi in HQ</li>
+                    <li>Home office fatigue: serve disciplina per separare lavoro e vita privata</li>
+                </ul>
+
+                <h2>Il modello ibrido: best of both worlds</h2>
+                <p>Molti remote worker per aziende estere vivono a Milano per:</p>
+
+                <ul>
+                    <li>Sfruttare stipendio estero con qualità urbana italiana</li>
+                    <li>Alternare WFH e coworking per socialità controllata</li>
+                    <li>Accedere a eventi tech e community locale pur lavorando per team globale</li>
+                    <li>Viaggiare facilmente (Milano hub aeroportuale europeo) mantenendo base stabile</li>
+                </ul>
+
+                <h2>Considerazioni fiscali pratiche</h2>
+
+                <h3>Residenza fiscale e doppia imposizione</h3>
+                <p>Se lavori per azienda estera ma risiedi in Italia >183 giorni/anno, sei fiscalmente residente italiano e devi dichiarare tutti i redditi mondiali. Verifica trattati contro doppia imposizione tra Italia e paese del datore di lavoro.</p>
+
+                <h3>Partita IVA vs contratto dipendente estero</h3>
+                <p>Alcune aziende remote richiedono P.IVA italiana:</p>
+
+                <ul>
+                    <li>Regime forfettario (fino €85k fatturato): tassazione agevolata 5-15%</li>
+                    <li>Regime ordinario: IRPEF piena + INPS gestione separata (~25-35% contributi)</li>
+                    <li>Consulta commercialista per ottimizzazione fiscale legale</li>
+                </ul>
+
+                <h3>Cambio valuta e costi bancari</h3>
+                <p>Se stipendio in USD/GBP, considera:</p>
+
+                <ul>
+                    <li>Spread bancario su conversione (1-3%)</li>
+                    <li>Rischio cambio: stipendio in USD può variare del 5-10% annuo vs EUR</li>
+                    <li>Usa servizi come Wise per ridurre commissioni</li>
+                </ul>
+
+                <h2>Conclusione: quale scenario scegliere?</h2>
+
+                <h3>Scegli Milano con stipendio locale se:</h3>
+                <ul>
+                    <li>Sei early career e prioritizzi crescita rapida tramite networking fisico e job hopping locale</li>
+                    <li>Valorizzi molto cultura urbana, socialità e scena milanese</li>
+                    <li>Prevedi di restare in Italia a lungo termine costruendo carriera locale</li>
+                </ul>
+
+                <h3>Scegli remote estero se:</h3>
+                <ul>
+                    <li>Massimizzare risparmio è priorità (casa, investimenti, famiglia futura)</li>
+                    <li>Hai già esperienza e network consolidato, non dipendi da presenza fisica per crescere</li>
+                    <li>Vuoi flessibilità geografica: vivere a Milano oggi, spostarti domani senza cambiare lavoro</li>
+                    <li>Sei disciplinato nel gestire isolamento e autonomia del remote puro</li>
+                </ul>
+
+                <p><strong>Modello ibrido (remote estero + vita Milano):</strong><br>
+                Probabilmente la scelta ottimale per molti tech worker italiani: stipendio competitivo europeo/US, tasse italiane (non ottimali ma gestibili), qualità della vita milanese, flessibilità di viaggiare. Richiede azienda con vera cultura remote-first e capacità di gestire fusi orari.</p>
+
+                <!-- Article Footer -->
+                <div class="mt-12 pt-8 border-t border-tb-gray-700">
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#career</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#finance</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#milano</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#remote-work</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#salaries</span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                            ← Back to Blog
+                        </a>
+
+                        <!-- Share buttons could go here -->
+                        <div class="text-tb-gray-500 text-sm">
+                            Share this article
+                        </div>
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </section>
+
+    <!-- NEWSLETTER SECTION -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="bg-gradient-to-r from-tb-green to-tb-blue p-12 rounded-xl text-center">
+                <h2 class="text-3xl font-bold mb-4 text-black">
+                    📬 Subscribe alla Newsletter
+                </h2>
+                <p class="text-black text-opacity-80 mb-6 max-w-2xl mx-auto">
+                    Ricevi gli articoli nuovi, eventi esclusivi e AWS tips direttamente nella tua inbox. Una volta a settimana, zero spam.
+                </p>
+                <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <input
+                        type="email"
+                        placeholder="dev@example.com"
+                        class="flex-1 px-4 py-3 rounded bg-white text-black font-mono focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                    <button
+                        type="submit"
+                        class="bg-black text-tb-green font-bold px-6 py-3 rounded hover:bg-tb-gray-900 transition"
+                    >
+                        subscribe()
+                    </button>
+                </form>
+                <p class="text-black text-opacity-60 text-xs mt-4">
+                    Unsubscribe in qualsiasi momento. Privacy-first.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-12 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-green-400 mb-4">TerraByte</h3>
+                    <p class="text-sm text-gray-400">Il primo Phygital Coffee per developer a Milano Isola.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="index.html" class="hover:text-green-400">Home</a></li>
+                        <li><a href="menu.html" class="hover:text-green-400">Menu</a></li>
+                        <li><a href="shop.html" class="hover:text-green-400">Shop</a></li>
+                        <li><a href="coworking.html" class="hover:text-green-400">Coworking</a></li>
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Community</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                        <li><a href="#" class="hover:text-green-400">Discord</a></li>
+                        <li><a href="sustainability.html" class="hover:text-green-400">Sustainability</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contatti</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>📍 Via Pastrengo, Milano Isola</li>
+                        <li>📧 hello@terrabyte.coffee</li>
+                        <li>📱 +39 02 1234 5678</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                <p>© 2026 TerraByte Coffee. All rights reserved. | Made with ☕ & 💻 in Milano</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

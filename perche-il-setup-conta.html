@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perché il Setup Conta | TerraByte Blog</title>
+    <meta name="description" content="Guida completa al setup perfetto per remote developer a Milano Isola. Hardware, software, routine quotidiana e principi per massimizzare la produttività.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tb-dark': '#1e1e1e',
+                        'tb-gray-900': '#2D3436',
+                        'tb-gray-800': '#394042',
+                        'tb-gray-700': '#4a5254',
+                        'tb-gray-600': '#636e72',
+                        'tb-gray-400': '#b2bec3',
+                        'tb-light': '#E0E0E0',
+                        'tb-green': '#00B894',
+                        'tb-green-dark': '#00a080',
+                        'tb-purple': '#D6A2E8',
+                        'tb-blue': '#0984e3',
+                    },
+                    fontFamily: {
+                        'mono': ['Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                @apply bg-gradient-to-br from-tb-dark to-tb-gray-900 text-tb-light font-mono min-h-screen;
+            }
+
+            /* Scrollbar */
+            ::-webkit-scrollbar {
+                width: 10px;
+                background: #2D3436;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #394042;
+                border: 1px solid #00B894;
+                border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #00B894;
+            }
+        }
+
+        @layer components {
+            /* Animazioni */
+            @keyframes blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+
+            .cursor-blink {
+                animation: blink 1s step-end infinite;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.6s ease-in;
+            }
+
+            /* Card hover effect */
+            .card-hover {
+                @apply transition-all duration-300;
+            }
+
+            .card-hover:hover {
+                @apply -translate-y-1;
+                box-shadow: 0 10px 30px rgba(0, 184, 148, 0.2);
+            }
+
+            /* Border glow */
+            .border-glow-green:hover {
+                box-shadow: 0 0 20px rgba(0, 184, 148, 0.4);
+            }
+
+            /* Article specific styles */
+            .article-content {
+                @apply text-tb-light leading-relaxed;
+            }
+
+            .article-content h2 {
+                @apply text-2xl font-bold text-tb-green mb-4 mt-8;
+            }
+
+            .article-content h3 {
+                @apply text-xl font-bold text-tb-green mb-3 mt-6;
+            }
+
+            .article-content h4 {
+                @apply text-lg font-bold text-tb-purple mb-2 mt-4;
+            }
+
+            .article-content p {
+                @apply mb-4;
+            }
+
+            .article-content ul {
+                @apply mb-6 ml-6;
+            }
+
+            .article-content li {
+                @apply mb-2;
+            }
+
+            .article-content strong {
+                @apply text-tb-green font-bold;
+            }
+
+            .article-content em {
+                @apply text-tb-purple italic;
+            }
+
+            .code-block {
+                @apply bg-tb-gray-900 p-4 rounded border border-tb-gray-700 font-mono text-sm mb-4 overflow-x-auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CART OVERLAY -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- CART PANEL -->
+    <div id="cart-panel" class="fixed top-0 right-0 h-full w-96 max-w-full bg-gradient-to-b from-tb-gray-900 to-tb-dark shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col border-l-2 border-tb-green">
+        <div class="p-6 border-b border-tb-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-tb-green">CART.log</h2>
+            <button id="close-cart" class="text-tb-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-3">
+            <p id="empty-cart-msg" class="text-tb-gray-600 text-center mt-10">[NULL] Cart is empty.<br>Select items to compile.</p>
+        </div>
+
+        <div class="p-6 border-t border-tb-gray-800 bg-tb-gray-900">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-tb-gray-400">TOTAL:</span>
+                <span id="cart-total" class="text-2xl font-bold text-tb-green">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-tb-green hover:bg-tb-green-dark text-black font-bold py-3 rounded transition-all duration-200 transform hover:scale-105">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVBAR DEFINITIVA v2.0 -->
+    <!-- === 2. NAVBAR (Universale per tutte le pagine) === -->
+    <!-- NAVIGATION BAR -->
+    <nav class="fixed top-0 w-full bg-gray-900 bg-opacity-95 backdrop-blur-sm z-30 border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-green-400"><span class="text-tb-purple"><</span>TerraByte<span class="text-tb-purple">/></span></a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="index.html" class="text-gray-300 hover:text-green-400 transition">./home</a>
+                <a href="menu.html" class="text-gray-300 hover:text-green-400 transition">./menu</a>
+                <a href="shop.html" class="text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+                <a href="coworking.html" class="text-gray-300 hover:text-green-400 transition">./coworking</a>
+                <a href="events.html" class="text-gray-300 hover:text-green-400 transition">./events</a>
+                <a href="blog.html" class="text-green-400 font-bold transition">./blog</a>
+                <a href="sustainability.html" class="text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+
+                <!-- Hamburger Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+
+
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden px-6 pb-4 space-y-2 bg-gray-900 border-t border-gray-800">
+            <a href="index.html" class="block text-gray-300 hover:text-green-400 transition py-2">./home</a>
+            <a href="menu.html" class="block text-gray-300 hover:text-green-400 transition py-2">./menu</a>
+            <a href="shop.html" class="block text-gray-300 hover:text-green-400 transition py-2">./shop_merch</a>
+            <a href="coworking.html" class="block text-gray-300 hover:text-green-400 transition py-2">./coworking</a>
+            <a href="events.html" class="block text-gray-300 hover:text-green-400 transition py-2">./events</a>
+            <a href="blog.html" class="block text-green-400 font-bold transition py-2">./blog</a>
+            <a href="sustainability.html" class="block text-gray-300 hover:text-green-400 transition py-2">./zero_waste</a>
+        </div>
+    </nav>
+
+    <!-- ARTICLE HEADER -->
+    <section class="pt-32 pb-16 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="mb-8">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="bg-tb-green text-black text-xs font-bold px-3 py-1 rounded">FEATURED ARTICLE</span>
+                    <span class="text-tb-gray-500 text-sm">• 15 Gen 2026 • 8 min read</span>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                    Setup Perfetto per Remote Developer a Milano Isola
+                </h1>
+                <p class="text-xl text-tb-gray-400 max-w-2xl">
+                    Guida completa all'ottimizzazione dell'ambiente di lavoro per massimizzare produttività e benessere in un contesto urbano.
+                </p>
+            </div>
+
+            <!-- Article Meta -->
+            <div class="flex flex-wrap gap-2 mb-8">
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#productivity</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#remote-work</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#milano</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#hardware</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#tools</span>
+            </div>
+
+            <!-- Back to Blog -->
+            <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                ← Back to Blog
+            </a>
+        </div>
+    </section>
+
+    <!-- ARTICLE CONTENT -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <article class="article-content">
+
+                <p>Lavorare da remoto in un contesto urbano come Milano Isola significa bilanciare focus profondo, comfort fisico e qualità della vita nel quartiere. Un setup curato riduce la fatica cognitiva, previene problemi fisici e ti permette di entrare in "modalità produttiva" quasi on demand.</p>
+
+                <h2>Hardware: la postazione ideale</h2>
+
+                <h3>Scrivania ed ergonomia</h3>
+                <p>Una buona postazione parte da superficie e sedia. Una sedia di fascia alta (es. Herman Miller o equivalenti ergonomiche) permette di lavorare ore senza affaticare schiena e collo. Abbinata a una scrivania stabile, idealmente regolabile in altezza, rende sostenibile il lavoro full‑remote a lungo termine.</p>
+
+                <p><strong>Elementi chiave:</strong></p>
+                <ul>
+                    <li>Sedia ergonomica con supporto lombare regolabile.</li>
+                    <li>Scrivania ampia (almeno 120 cm) per monitor, laptop, notebook e accessori.</li>
+                    <li>Supporto per piedi o regolazione corretta dell'altezza per evitare tensione su gambe e ginocchia.</li>
+                </ul>
+
+                <h3>Monitor, input e docking</h3>
+                <p>Un monitor 4K da 27" con connessione USB‑C o DisplayPort consente di avere più finestre affiancate (editor, browser, console, documentazione) senza sforzo visivo. Un layout "laptop chiuso + monitor esterno" aiuta a mantenere la postura corretta, soprattutto se il monitor è allineato all'altezza degli occhi.</p>
+
+                <p><strong>Setup consigliato:</strong></p>
+                <ul>
+                    <li>Monitor 4K 27" o 32" con buona resa cromatica.</li>
+                    <li>Dock USB‑C per collegare con un solo cavo alimentazione, rete e periferiche.</li>
+                    <li>Tastiera meccanica o low‑profile a seconda della preferenza tattile e sonora.</li>
+                    <li>Mouse ergonomico (o trackball) per ridurre stress a polso e spalla.</li>
+                </ul>
+
+                <h3>Audio, rete e accessori</h3>
+                <p>In uno spazio come Isola, spesso frequentato da altri knowledge worker, il controllo dell'audio è fondamentale per call e focus.</p>
+
+                <p><strong>Accessori essenziali:</strong></p>
+                <ul>
+                    <li>Cuffie over‑ear con cancellazione attiva del rumore per call e deep work.</li>
+                    <li>Microfono integrato di buona qualità (o dedicato, se fai molte demo/stream).</li>
+                    <li>Connessione via Ethernet dove possibile per latenza stabile verso servizi cloud.</li>
+                    <li>Lampada da scrivania con temperatura regolabile (luce più fredda per focus, più calda per sera).</li>
+                    <li>Supporto laptop in alluminio per usarlo come secondo monitor verticale, se serve.</li>
+                </ul>
+
+                <h2>Software tools: stack digitale per produttività</h2>
+
+                <h3>Ambiente di sviluppo e infrastruttura</h3>
+                <p>Per un remote developer, l'ambiente di lavoro è un mix di IDE, servizi cloud e strumenti di collaborazione. Un setup coerente e ripetibile riduce il tempo di "bootstrap" della giornata.</p>
+
+                <p><strong>Struttura tipica:</strong></p>
+                <ul>
+                    <li>IDE principale (VS Code, JetBrains) con profili per diversi progetti.</li>
+                    <li>Tool di containerizzazione (Docker) e orchestrazione locale per replicare setup di produzione.</li>
+                    <li>CLI per i cloud provider principali (es. AWS CLI) configurata con profili per ambienti diversi.</li>
+                    <li>Gestore segreti/credential (password manager, integrazione con KMS/Vault aziendale).</li>
+                </ul>
+
+                <h3>Comunicazione e collaborazione</h3>
+                <p>In un quartiere ben connesso come Isola, molte interazioni passano da Slack, Teams o Discord, più strumenti di ticketing.</p>
+
+                <p><strong>Buone pratiche:</strong></p>
+                <ul>
+                    <li>Canali separati per focus (es. silenziare i canali social nelle ore di deep work).</li>
+                    <li>Integrazioni con issue tracker (Jira, Linear, GitHub Issues) per ridurre il contesto switching.</li>
+                    <li>Bot che ricordano stand‑up, retro e code review senza bisogno di mail aggiuntive.</li>
+                </ul>
+
+                <h3>Produttività, focus e automazioni</h3>
+                <p>Milano Isola offre molte distrazioni positive (bar, locali, eventi), quindi serve disciplina digitale per mantenere il focus nei blocchi chiave della giornata.</p>
+
+                <p><strong>Strumenti utili:</strong></p>
+                <ul>
+                    <li>App Pomodoro o time‑boxing per dividere la giornata in blocchi da 25–50 minuti.</li>
+                    <li>To‑do manager semplice (es. board Kanban personale) per avere 3–5 task chiave al giorno.</li>
+                    <li>Blocco di notifiche su smartphone e desktop durante i periodi di lavoro intenso.</li>
+                    <li>Snippet manager e template per email tecniche, code review e risposte ricorrenti.</li>
+                </ul>
+
+                <h2>Routine quotidiana: dal primo caffè al wrap‑up</h2>
+
+                <h3>Mattina: boot sequence</h3>
+                <p>La mattina è il momento migliore per il lavoro a più alta intensità cognitiva. Un remote developer può sfruttare il quartiere per iniziare la giornata con energia.</p>
+
+                <p><strong>Routine tipo:</strong></p>
+                <ul>
+                    <li>Passeggiata breve nel quartiere per "staccare" casa e lavoro.</li>
+                    <li>Primo caffè specialty (espresso o filter) come innesco simbolico dell'inizio giornata.</li>
+                    <li>Revisione rapida del task board: 1–2 obiettivi "must" e massimo 3–4 "nice to have".</li>
+                    <li>Blocco di deep work di 90–120 minuti prima di aprire chat e mail.</li>
+                </ul>
+
+                <h3>Mezzogiorno: gestione energia</h3>
+                <p>La pausa pranzo in una zona come Isola offre molte opzioni, ma l'obiettivo è non rompere il ritmo.</p>
+
+                <p><strong>Suggerimenti:</strong></p>
+                <ul>
+                    <li>Pasto leggero (evitando cibi troppo pesanti) per evitare calo post‑prandiale.</li>
+                    <li>10–15 minuti di passeggiata o stretching per compensare la sedentarietà.</li>
+                    <li>Eventuale secondo caffè filter o V60, più equilibrato come caffeina rispetto agli energy drink.</li>
+                </ul>
+
+                <h3>Pomeriggio: collaboration & delivery</h3>
+                <p>Il pomeriggio si presta a:</p>
+                <ul>
+                    <li>Call con il team, refinement, pair programming remoto.</li>
+                    <li>Debug di problemi complessi ma già definiti.</li>
+                    <li>Review del lavoro del mattino e aggiornamento dei ticket.</li>
+                </ul>
+
+                <p><strong>Verso fine giornata:</strong></p>
+                <ul>
+                    <li>Breve retro personale: cosa ha funzionato, cosa no, cosa migliorare domani.</li>
+                    <li>Pulizia della to‑do list, preparazione task per il giorno dopo.</li>
+                    <li>Shutdown rituale (chiusura IDE, spegnimento monitor, salvataggio note) per separare mentalmente lavoro e tempo libero.</li>
+                </ul>
+
+                <h2>Sfruttare Milano Isola come estensione del setup</h2>
+                <p>Uno dei vantaggi di lavorare in un quartiere come Isola è che lo spazio circostante diventa parte dell'ambiente di lavoro.</p>
+
+                <p><strong>Idee pratiche:</strong></p>
+                <ul>
+                    <li>Alternare giornate in coworking e giorni full‑home per mantenere varietà e socialità.</li>
+                    <li>Usare i coffee shop con Wi‑Fi affidabile per sessioni di lavoro più leggere (scrittura documentazione, brainstorming).</li>
+                    <li>Agganciare gli orari di lavoro a eventi tech in zona (meetup, talk, hackathon) per mantenere il network vivo.</li>
+                </ul>
+
+                <h2>Sintesi: principi di un setup "perfetto"</h2>
+                <p>Più che una lista di oggetti, un setup ottimale per un remote developer a Milano Isola si basa su alcuni principi:</p>
+
+                <ul>
+                    <li><strong>Ergonomia prima di "esthetic":</strong> il corpo deve reggere anni di lavoro al pc.</li>
+                    <li><strong>Riduzione del rumore:</strong> meno frizioni (fisiche, digitali, ambientali), più focus.</li>
+                    <li><strong>Rituali chiari:</strong> primo caffè, blocchi di focus, shutdown serale.</li>
+                    <li><strong>Integrazione con il quartiere:</strong> sfruttare coworking, specialty coffee e community tech come estensioni naturali del proprio ambiente di lavoro.</li>
+                </ul>
+
+                <!-- Article Footer -->
+                <div class="mt-12 pt-8 border-t border-tb-gray-700">
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#productivity</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#remote-work</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#milano</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#hardware</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#tools</span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                            ← Back to Blog
+                        </a>
+
+                        <!-- Share buttons could go here -->
+                        <div class="text-tb-gray-500 text-sm">
+                            Share this article
+                        </div>
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </section>
+
+    <!-- NEWSLETTER SECTION -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="bg-gradient-to-r from-tb-green to-tb-blue p-12 rounded-xl text-center">
+                <h2 class="text-3xl font-bold mb-4 text-black">
+                    📬 Subscribe alla Newsletter
+                </h2>
+                <p class="text-black text-opacity-80 mb-6 max-w-2xl mx-auto">
+                    Ricevi gli articoli nuovi, eventi esclusivi e AWS tips direttamente nella tua inbox. Una volta a settimana, zero spam.
+                </p>
+                <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <input
+                        type="email"
+                        placeholder="dev@example.com"
+                        class="flex-1 px-4 py-3 rounded bg-white text-black font-mono focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                    <button
+                        type="submit"
+                        class="bg-black text-tb-green font-bold px-6 py-3 rounded hover:bg-tb-gray-900 transition"
+                    >
+                        subscribe()
+                    </button>
+                </form>
+                <p class="text-black text-opacity-60 text-xs mt-4">
+                    Unsubscribe in qualsiasi momento. Privacy-first.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-12 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-green-400 mb-4">TerraByte</h3>
+                    <p class="text-sm text-gray-400">Il primo Phygital Coffee per developer a Milano Isola.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="index.html" class="hover:text-green-400">Home</a></li>
+                        <li><a href="menu.html" class="hover:text-green-400">Menu</a></li>
+                        <li><a href="shop.html" class="hover:text-green-400">Shop</a></li>
+                        <li><a href="coworking.html" class="hover:text-green-400">Coworking</a></li>
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Community</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                        <li><a href="#" class="hover:text-green-400">Discord</a></li>
+                        <li><a href="sustainability.html" class="hover:text-green-400">Sustainability</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contatti</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>📍 Via Pastrengo, Milano Isola</li>
+                        <li>📧 hello@terrabyte.coffee</li>
+                        <li>📱 +39 02 1234 5678</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                <p>© 2026 TerraByte Coffee. All rights reserved. | Made with ☕ & 💻 in Milano</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

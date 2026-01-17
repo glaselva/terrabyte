@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Security: Guida Pratica per Developer | TerraByte Blog</title>
+    <meta name="description" content="Guida completa alla sicurezza AWS per developer: IAM policies, KMS encryption, Security Groups e checklist per infrastruttura sicura in produzione.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tb-dark': '#1e1e1e',
+                        'tb-gray-900': '#2D3436',
+                        'tb-gray-800': '#394042',
+                        'tb-gray-700': '#4a5254',
+                        'tb-gray-600': '#636e72',
+                        'tb-gray-400': '#b2bec3',
+                        'tb-light': '#E0E0E0',
+                        'tb-green': '#00B894',
+                        'tb-green-dark': '#00a080',
+                        'tb-purple': '#D6A2E8',
+                        'tb-blue': '#0984e3',
+                    },
+                    fontFamily: {
+                        'mono': ['Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                @apply bg-gradient-to-br from-tb-dark to-tb-gray-900 text-tb-light font-mono min-h-screen;
+            }
+
+            /* Scrollbar */
+            ::-webkit-scrollbar {
+                width: 10px;
+                background: #2D3436;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #394042;
+                border: 1px solid #00B894;
+                border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #00B894;
+            }
+        }
+
+        @layer components {
+            /* Animazioni */
+            @keyframes blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+
+            .cursor-blink {
+                animation: blink 1s step-end infinite;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.6s ease-in;
+            }
+
+            /* Card hover effect */
+            .card-hover {
+                @apply transition-all duration-300;
+            }
+
+            .card-hover:hover {
+                @apply -translate-y-1;
+                box-shadow: 0 10px 30px rgba(0, 184, 148, 0.2);
+            }
+
+            /* Border glow */
+            .border-glow-green:hover {
+                box-shadow: 0 0 20px rgba(0, 184, 148, 0.4);
+            }
+
+            /* Article specific styles */
+            .article-content {
+                @apply text-tb-light leading-relaxed;
+            }
+
+            .article-content h2 {
+                @apply text-2xl font-bold text-tb-green mb-4 mt-8;
+            }
+
+            .article-content h3 {
+                @apply text-xl font-bold text-tb-green mb-3 mt-6;
+            }
+
+            .article-content h4 {
+                @apply text-lg font-bold text-tb-purple mb-2 mt-4;
+            }
+
+            .article-content p {
+                @apply mb-4;
+            }
+
+            .article-content ul {
+                @apply mb-6 ml-6;
+            }
+
+            .article-content li {
+                @apply mb-2;
+            }
+
+            .article-content strong {
+                @apply text-tb-green font-bold;
+            }
+
+            .article-content em {
+                @apply text-tb-purple italic;
+            }
+
+            .code-block {
+                @apply bg-tb-gray-900 p-4 rounded border border-tb-gray-700 font-mono text-sm mb-4 overflow-x-auto;
+            }
+
+            /* Checklist styles */
+            .checklist-item {
+                @apply flex items-start gap-3 mb-3;
+            }
+
+            .checklist-item::before {
+                content: '✓';
+                @apply text-tb-green font-bold text-lg;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CART OVERLAY -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- CART PANEL -->
+    <div id="cart-panel" class="fixed top-0 right-0 h-full w-96 max-w-full bg-gradient-to-b from-tb-gray-900 to-tb-dark shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col border-l-2 border-tb-green">
+        <div class="p-6 border-b border-tb-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-tb-green">CART.log</h2>
+            <button id="close-cart" class="text-tb-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-3">
+            <p id="empty-cart-msg" class="text-tb-gray-600 text-center mt-10">[NULL] Cart is empty.<br>Select items to compile.</p>
+        </div>
+
+        <div class="p-6 border-t border-tb-gray-800 bg-tb-gray-900">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-tb-gray-400">TOTAL:</span>
+                <span id="cart-total" class="text-2xl font-bold text-tb-green">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-tb-green hover:bg-tb-green-dark text-black font-bold py-3 rounded transition-all duration-200 transform hover:scale-105">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVIGATION BAR -->
+    <nav class="fixed top-0 w-full bg-gray-900 bg-opacity-95 backdrop-blur-sm z-30 border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-green-400"><span class="text-highlight"><</span>TerraByte<span class="text-highlight">/></span></a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="index.html" class="text-gray-300 hover:text-green-400 transition">./home</a>
+                <a href="menu.html" class="text-gray-300 hover:text-green-400 transition">./menu</a>
+                <a href="shop.html" class="text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+                <a href="coworking.html" class="text-gray-300 hover:text-green-400 transition">./coworking</a>
+                <a href="events.html" class="text-gray-300 hover:text-green-400 transition">./events</a>
+                <a href="blog.html" class="text-green-400 font-bold transition">./blog</a>
+                <a href="sustainability.html" class="text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+                <a href="coworking.html#book" class="bg-green-500 hover:bg-green-600 text-black font-bold px-4 py-2 rounded transition transform hover:scale-105">
+                    Prenota_Desk()
+                </a>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden px-6 pb-4 space-y-2">
+            <a href="index.html" class="block text-gray-300 hover:text-green-400 transition">./home</a>
+            <a href="menu.html" class="block text-gray-300 hover:text-green-400 transition">./menu</a>
+            <a href="shop.html" class="block text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+            <a href="coworking.html" class="block text-gray-300 hover:text-green-400 transition">./coworking</a>
+            <a href="events.html" class="block text-gray-300 hover:text-green-400 transition">./events</a>
+            <a href="blog.html" class="block text-green-400 font-bold transition">./blog</a>
+            <a href="sustainability.html" class="block text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+        </div>
+    </nav>
+
+    <!-- ARTICLE HEADER -->
+    <section class="pt-32 pb-16 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="mb-8">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-tb-gray-500 text-sm">• 1 Gen 2026 • 15 min read</span>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                    AWS Security: Guida Pratica per Developer
+                </h1>
+                <p class="text-xl text-tb-gray-400 max-w-2xl">
+                    IAM policies, KMS encryption, Security Groups e checklist completa per infrastruttura sicura. Tutto quello che devi sapere prima di deployare in produzione.
+                </p>
+            </div>
+
+            <!-- Article Meta -->
+            <div class="flex flex-wrap gap-2 mb-8">
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#aws</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#security</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#iam</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#encryption</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#infrastructure</span>
+            </div>
+
+            <!-- Back to Blog -->
+            <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                ← Back to Blog
+            </a>
+        </div>
+    </section>
+
+    <!-- ARTICLE CONTENT -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <article class="article-content">
+
+                <h2>Introduzione: security by design, non come afterthought</h2>
+                <p>Mettere in sicurezza un'infrastruttura AWS non significa solo "bloccare tutto": richiede bilanciare protezione, usabilità e costi. Molti breach documentati derivano da configurazioni sbagliate—bucket S3 pubblici, IAM roles over-permissive, security group troppo aperti—non da vulnerabilità nel codice. Questa guida fornisce pratiche concrete per sviluppatori che devono deployare in produzione senza dedicare mesi a diventare security expert.</p>
+
+                <h2>IAM: Identity and Access Management</h2>
+
+                <h3>Principio di least privilege</h3>
+                <p>IAM controlla chi (utente, servizio, ruolo) può fare cosa (azione) su quali risorse AWS. Il principio fondamentale è least privilege: concedere solo i permessi minimi necessari per svolgere un task specifico.</p>
+
+                <h4>Errori comuni:</h4>
+                <ul>
+                    <li>Usare policy predefinite troppo ampie come AdministratorAccess per utenti non-admin.</li>
+                    <li>Creare un unico ruolo IAM condiviso da tutte le Lambda o EC2 del progetto.</li>
+                    <li>Assegnare Resource: "*" quando si potrebbe limitare a bucket, tabella o funzione specifica.</li>
+                </ul>
+
+                <h4>Best practices:</h4>
+
+                <h5>Policy granulari per servizio</h5>
+                <ul>
+                    <li>Ogni Lambda, ECS task o EC2 dovrebbe avere il proprio execution role dedicato.</li>
+                    <li>Esempio per Lambda che legge da DynamoDB e scrive su S3:</li>
+                </ul>
+
+                <div class="code-block">
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["dynamodb:GetItem", "dynamodb:Query"],
+      "Resource": "arn:aws:dynamodb:eu-west-1:123456789:table/MyTable"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": "arn:aws:s3:::my-bucket/uploads/*"
+    }
+  ]
+}
+                </div>
+
+                <p>Evita dynamodb:* o s3:*—specifica solo le azioni realmente usate.</p>
+
+                <h5>IAM Access Analyzer</h5>
+                <ul>
+                    <li>Tool AWS che scansiona policy e identifica permessi over-provisioned o risorse condivise esternamente.</li>
+                    <li>Attivalo su ogni Region e revisiona regolarmente i finding.</li>
+                </ul>
+
+                <h5>MFA per utenti umani</h5>
+                <ul>
+                    <li>Abilita Multi-Factor Authentication per tutti gli utenti IAM con accesso console o CLI.</li>
+                    <li>Usa policy di tipo Condition: {"Bool": {"aws:MultiFactorAuthPresent": "true"}} per operazioni sensibili (es. eliminare risorse, modificare IAM).</li>
+                </ul>
+
+                <h5>Rotazione credenziali</h5>
+                <ul>
+                    <li>Ruota access key ogni 90 giorni per utenti IAM programmatici.</li>
+                    <li>Preferisci IAM roles con STS temporary credentials invece di long-lived access key dove possibile.</li>
+                </ul>
+
+                <h5>Service Control Policies (SCP) per Organizations</h5>
+                <ul>
+                    <li>Se usi AWS Organizations, applica SCP per limitare azioni a livello di account (es. blocca creazione di utenti IAM root, impedisci deploy fuori da certe Region).</li>
+                </ul>
+
+                <h2>KMS: Key Management Service per crittografia</h2>
+
+                <h3>Crittografia at-rest e in-transit</h3>
+                <p>AWS offre crittografia automatica per molti servizi (S3, EBS, RDS), ma gestire le chiavi in modo sicuro è cruciale.</p>
+
+                <h4>Cosa cifrare:</h4>
+                <ul>
+                    <li>S3: bucket con dati sensibili (PII, credenziali, backup).</li>
+                    <li>EBS: volumi attached a EC2 con database o file confidenziali.</li>
+                    <li>RDS/Aurora: snapshot e dati a riposo.</li>
+                    <li>Secrets Manager / Parameter Store: credenziali applicative, API key, token OAuth.</li>
+                </ul>
+
+                <h4>Best practices KMS:</h4>
+
+                <h5>Customer Managed Keys (CMK) invece di AWS Managed</h5>
+                <ul>
+                    <li>Le CMK ti danno controllo totale: audit via CloudTrail, rotazione automatica, policy di accesso granulari.</li>
+                    <li>Esempio: crea una CMK dedicata per cifrare variabili d'ambiente Lambda o RDS encryption.</li>
+                </ul>
+
+                <h5>Key policies e grants</h5>
+                <ul>
+                    <li>Ogni CMK ha una key policy che definisce chi può usarla per cifrare/decifrare.</li>
+                    <li>Usa grants per concedere temporaneamente accesso a servizi (es. EBS può usare la chiave per cifrare volumi).</li>
+                </ul>
+
+                <h5>Rotazione automatica</h5>
+                <ul>
+                    <li>Abilita automatic key rotation (ogni anno) per CMK simmetriche.</li>
+                    <li>La rotazione è trasparente: dati cifrati con chiavi vecchie restano accessibili, nuovi dati usano la chiave ruotata.</li>
+                </ul>
+
+                <h5>Envelope encryption per grandi volumi</h5>
+                <ul>
+                    <li>KMS cripta data key, che poi cripta i dati effettivi localmente—riduce chiamate API a KMS e accelera performance.</li>
+                    <li>Usato automaticamente da servizi come S3 con SSE-KMS.</li>
+                </ul>
+
+                <h5>Monitoring via CloudTrail</h5>
+                <ul>
+                    <li>Ogni chiamata a KMS (Encrypt, Decrypt, GenerateDataKey) è loggata su CloudTrail.</li>
+                    <li>Configura allarmi CloudWatch per detect anomalie (es. spike improvviso di decrypt da un servizio non previsto).</li>
+                </ul>
+
+                <h2>Security Groups e Network Access Control</h2>
+
+                <h3>Security Groups: firewall stateful per istanze</h3>
+                <p>Security Groups controllano traffico in ingresso (inbound) e uscita (outbound) da risorse EC2, RDS, Lambda in VPC.</p>
+
+                <h4>Errori comuni:</h4>
+                <ul>
+                    <li>Security group con 0.0.0.0/0 su porta SSH (22) o RDP (3389)—espone istanze a brute-force attack.</li>
+                    <li>Nessuna regola outbound configurata (default permette tutto).</li>
+                    <li>Security group condiviso tra ambienti dev/staging/prod, violando isolation.</li>
+                </ul>
+
+                <h4>Best practices:</h4>
+
+                <h5>Least privilege per inbound rules</h5>
+                <ul>
+                    <li>Permetti solo IP sorgenti specifici per SSH/RDP (es. IP ufficio o VPN aziendale).</li>
+                    <li>Per servizi pubblici (ALB, API Gateway), limita a porte necessarie (80, 443) e usa Web Application Firewall (WAF) come layer aggiuntivo.</li>
+                </ul>
+
+                <h5>Segmentazione per tier</h5>
+                <ul>
+                    <li>Web tier: Security Group che accetta traffico da internet su 443, può chiamare app tier.</li>
+                    <li>App tier: accetta solo traffico da web tier, può chiamare database tier.</li>
+                    <li>Database tier: accetta solo traffico da app tier, nessun accesso diretto da internet.</li>
+                </ul>
+
+                <h5>Logging con VPC Flow Logs</h5>
+                <ul>
+                    <li>Abilita Flow Logs per monitorare traffico accettato/rifiutato dai Security Group.</li>
+                    <li>Invia log a CloudWatch Logs o S3, analizza con Athena per detect pattern anomali.</li>
+                </ul>
+
+                <h5>Audit con AWS Config</h5>
+                <ul>
+                    <li>Crea Config Rules per verificare compliance (es. "nessun Security Group deve avere 0.0.0.0/0 su SSH").</li>
+                    <li>Notifica automatica quando una regola viene violata.</li>
+                </ul>
+
+                <h2>Secrets management: non hardcodare mai credenziali</h2>
+
+                <h3>AWS Secrets Manager e Systems Manager Parameter Store</h3>
+                <p>Hardcodare password, API key o token nel codice o variabili d'ambiente in chiaro è una pratica vulnerabile.</p>
+
+                <h4>Soluzioni sicure:</h4>
+
+                <h5>Secrets Manager</h5>
+                <ul>
+                    <li>Cifra automaticamente segreti con KMS.</li>
+                    <li>Supporta rotazione automatica per database RDS, Redshift, DocumentDB.</li>
+                    <li>Esempio: archivia credenziali RDS, Lambda le recupera via SDK all'avvio.</li>
+                </ul>
+
+                <h5>Parameter Store (SSM)</h5>
+                <ul>
+                    <li>Alternativa più economica di Secrets Manager (gratis fino a 10k parametri).</li>
+                    <li>Supporta encryption via KMS per parametri SecureString.</li>
+                    <li>Ideale per configurazioni non-rotanti (chiavi OAuth, endpoint API).</li>
+                </ul>
+
+                <h4>Best practices:</h4>
+                <ul>
+                    <li>Carica segreti fuori dall'handler Lambda (a livello globale), non a ogni invocazione—riduce chiamate API e latenza.</li>
+                    <li>Cachea segreti in memoria per 5-10 minuti, riducendo costi e migliorando performance.</li>
+                    <li>Non loggare mai segreti in CloudWatch Logs—sanitizza log output prima di scrivere.</li>
+                    <li>Usa IAM per limitare quali servizi possono leggere quali segreti (principle of least privilege).</li>
+                </ul>
+
+                <h2>Logging, monitoring e incident response</h2>
+
+                <h3>CloudWatch Logs e CloudTrail</h3>
+
+                <h4>CloudWatch Logs:</h4>
+                <ul>
+                    <li>Centralizza log di Lambda, EC2, RDS, API Gateway.</li>
+                    <li>Configura log retention policy (es. 30 giorni) per evitare accumulo infinito di log costosi.</li>
+                    <li>Usa Metric Filters per estrarre metriche custom (es. contare error log) e creare allarmi.</li>
+                </ul>
+
+                <h4>CloudTrail:</h4>
+                <ul>
+                    <li>Registra ogni chiamata API verso AWS (chi ha fatto cosa, quando).</li>
+                    <li>Essenziale per audit e forensics post-incident.</li>
+                    <li>Attiva CloudTrail in tutte le Region, invia log a S3 bucket cifrato con KMS e protetto da Object Lock per prevenire manomissione.</li>
+                </ul>
+
+                <h3>AWS GuardDuty</h3>
+                <ul>
+                    <li>Threat detection automatico basato su ML che analizza CloudTrail, VPC Flow Logs e DNS logs.</li>
+                    <li>Identifica comportamenti anomali (es. accesso da IP sospetto, privilege escalation, cryptomining su EC2).</li>
+                    <li>Costa pochi dollari/mese e può prevenire breach costosi—sempre attivarlo in produzione.</li>
+                </ul>
+
+                <h2>Checklist completa per infrastruttura sicura</h2>
+
+                <h3>IAM e Identity</h3>
+                <div class="checklist-item">
+                    Ogni servizio ha execution role dedicato con least privilege.
+                </div>
+                <div class="checklist-item">
+                    Nessun utente IAM con AdministratorAccess usato per operazioni quotidiane.
+                </div>
+                <div class="checklist-item">
+                    MFA abilitato per tutti gli utenti umani.
+                </div>
+                <div class="checklist-item">
+                    Access key ruotate ogni 90 giorni (o meglio: usa IAM roles dove possibile).
+                </div>
+                <div class="checklist-item">
+                    IAM Access Analyzer attivo e finding revisionati regolarmente.
+                </div>
+
+                <h3>Crittografia e Secrets</h3>
+                <div class="checklist-item">
+                    Tutti i bucket S3 con dati sensibili cifrati con SSE-KMS.
+                </div>
+                <div class="checklist-item">
+                    Volumi EBS e snapshot cifrati.
+                </div>
+                <div class="checklist-item">
+                    RDS/Aurora con encryption at-rest abilitata.
+                </div>
+                <div class="checklist-item">
+                    Secrets Manager o Parameter Store per credenziali (zero hardcoding).
+                </div>
+                <div class="checklist-item">
+                    CMK create per servizi critici, con automatic rotation abilitata.
+                </div>
+                <div class="checklist-item">
+                    CloudTrail monitora chiamate a KMS, allarmi su decrypt anomali.
+                </div>
+
+                <h3>Network Security</h3>
+                <div class="checklist-item">
+                    Security Groups configurati con least privilege: no 0.0.0.0/0 su SSH/RDP.
+                </div>
+                <div class="checklist-item">
+                    Segmentazione a tier (web / app / database) con Security Groups separati.
+                </div>
+                <div class="checklist-item">
+                    VPC Flow Logs attivi e analizzati per detect traffico anomalo.
+                </div>
+                <div class="checklist-item">
+                    NACL configurate dove serve un controllo stateless aggiuntivo.
+                </div>
+                <div class="checklist-item">
+                    WAF davanti a API Gateway o ALB per protezione layer 7.
+                </div>
+
+                <h3>Logging e Monitoring</h3>
+                <div class="checklist-item">
+                    CloudTrail attivo in tutte le Region, log inviati a S3 cifrato e protetto.
+                </div>
+                <div class="checklist-item">
+                    CloudWatch Logs con retention policy configurata.
+                </div>
+                <div class="checklist-item">
+                    GuardDuty attivo per threat detection automatico.
+                </div>
+                <div class="checklist-item">
+                    Allarmi CloudWatch su metriche critiche (error rate, latency, throttles).
+                </div>
+                <div class="checklist-item">
+                    X-Ray o equivalente per tracing distribuito e debug performance.
+                </div>
+
+                <h3>Compliance e Audit</h3>
+                <div class="checklist-item">
+                    AWS Config attivo con regole per compliance (es. "S3 buckets non pubblici").
+                </div>
+                <div class="checklist-item">
+                    Scan regolari con AWS Inspector per vulnerabilità in EC2/container.
+                </div>
+                <div class="checklist-item">
+                    Backup automatici di RDS/EBS con retention policy configurata.
+                </div>
+                <div class="checklist-item">
+                    Incident response plan documentato (chi chiamare, come rollback, come comunicare).
+                </div>
+                <div class="checklist-item">
+                    Revisioni security trimestrali con checklist OWASP o CIS AWS Foundations Benchmark.
+                </div>
+
+                <h3>Deployment e Code Security</h3>
+                <div class="checklist-item">
+                    Infrastructure as Code (CloudFormation/Terraform) versionata su Git.
+                </div>
+                <div class="checklist-item">
+                    Secrets non committati in repository (usa git-secrets o pre-commit hook).
+                </div>
+                <div class="checklist-item">
+                    Static Application Security Testing (SAST) in pipeline CI/CD.
+                </div>
+                <div class="checklist-item">
+                    Dependency scanning per librerie con vulnerabilità note (Snyk, Dependabot).
+                </div>
+                <div class="checklist-item">
+                    Blue-green deployment con rollback automatico se metriche si degradano.
+                </div>
+
+                <h2>Risorse per approfondire</h2>
+
+                <ul>
+                    <li><strong>AWS Well-Architected Framework - Security Pillar:</strong> guida ufficiale AWS con best practice approfondite.</li>
+                    <li><strong>CIS AWS Foundations Benchmark:</strong> checklist standard industry per configurazioni sicure.</li>
+                    <li><strong>OWASP Top 10 for Cloud:</strong> adattamento delle vulnerabilità web più comuni al contesto cloud.</li>
+                    <li><strong>AWS Security Blog:</strong> case study reali, nuove feature e best practice aggiornate.</li>
+                </ul>
+
+                <p>Mettere in sicurezza un'infrastruttura AWS è un processo continuo, non un task "fatto una volta". Usa questa checklist come punto di partenza, implementa monitoring robusto e mantieni aggiornato il tuo threat model man mano che l'architettura evolve.</p>
+
+                <!-- Article Footer -->
+                <div class="mt-12 pt-8 border-t border-tb-gray-700">
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#aws</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#security</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#iam</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#encryption</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#infrastructure</span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                            ← Back to Blog
+                        </a>
+
+                        <!-- Share buttons could go here -->
+                        <div class="text-tb-gray-500 text-sm">
+                            Share this article
+                        </div>
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </section>
+
+    <!-- NEWSLETTER SECTION -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="bg-gradient-to-r from-tb-green to-tb-blue p-12 rounded-xl text-center">
+                <h2 class="text-3xl font-bold mb-4 text-black">
+                    📬 Subscribe alla Newsletter
+                </h2>
+                <p class="text-black text-opacity-80 mb-6 max-w-2xl mx-auto">
+                    Ricevi gli articoli nuovi, eventi esclusivi e AWS tips direttamente nella tua inbox. Una volta a settimana, zero spam.
+                </p>
+                <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <input
+                        type="email"
+                        placeholder="dev@example.com"
+                        class="flex-1 px-4 py-3 rounded bg-white text-black font-mono focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                    <button
+                        type="submit"
+                        class="bg-black text-tb-green font-bold px-6 py-3 rounded hover:bg-tb-gray-900 transition"
+                    >
+                        subscribe()
+                    </button>
+                </form>
+                <p class="text-black text-opacity-60 text-xs mt-4">
+                    Unsubscribe in qualsiasi momento. Privacy-first.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-12 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-green-400 mb-4">TerraByte</h3>
+                    <p class="text-sm text-gray-400">Il primo Phygital Coffee per developer a Milano Isola.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="index.html" class="hover:text-green-400">Home</a></li>
+                        <li><a href="menu.html" class="hover:text-green-400">Menu</a></li>
+                        <li><a href="shop.html" class="hover:text-green-400">Shop</a></li>
+                        <li><a href="coworking.html" class="hover:text-green-400">Coworking</a></li>
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Community</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                        <li><a href="#" class="hover:text-green-400">Discord</a></li>
+                        <li><a href="sustainability.html" class="hover:text-green-400">Sustainability</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contatti</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>📍 Via Pastrengo, Milano Isola</li>
+                        <li>📧 hello@terrabyte.coffee</li>
+                        <li>📱 +39 02 1234 5678</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                <p>© 2026 TerraByte Coffee. All rights reserved. | Made with ☕ & 💻 in Milano</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

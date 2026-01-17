@@ -29,126 +29,128 @@
     </script>
     
     <link rel="stylesheet" href="style.css">
+
+    <!-- 👇 AGGIUNGI QUESTO BLOCCO QUI -->
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e1e1e 0%, #2D3436 100%) !important;
+            font-family: 'Courier New', monospace !important;
+            color: #E0E0E0 !important;
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            background: #2D3436;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #394042;
+            border: 1px solid #00B894;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00B894;
+        }
+
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 184, 148, 0.2);
+        }
+
+        nav {
+            backdrop-filter: blur(10px);
+        }
+    </style>
 </head>
 
 <body class="bg-primary text-offwhite font-sans antialiased flex flex-col min-h-screen">
-<!-- CARRELLO LATERALE (Overlay e Pannello) -->
-<div id="cart-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden backdrop-blur-sm transition-opacity"></div>
+<!-- CART OVERLAY (stesso delle altre pagine) -->
+<div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden"></div>
 
-<div id="cart-panel" class="fixed top-0 right-0 w-full md:w-96 h-full bg-surface border-l border-gray-700 z-[70] transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
-    <!-- Header -->
-    <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-primary">
-        <h2 class="font-mono text-xl font-bold flex items-center gap-2">
-            <span class="text-accent">></span> CART.log
-        </h2>
+<!-- CART PANEL -->
+<div id="cart-panel" class="fixed top-0 right-0 h-full w-96 bg-gradient-to-b from-gray-900 to-gray-800 shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col border-l-2 border-green-500">
+    <div class="p-6 border-b border-gray-700 flex justify-between items-center">
+        <h2 class="text-xl font-bold text-green-400">CART.log</h2>
         <button id="close-cart" class="text-gray-400 hover:text-white text-2xl">&times;</button>
     </div>
 
-    <!-- Lista Prodotti -->
-    <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
-        <div id="empty-cart-msg" class="text-center text-gray-500 mt-10 font-mono text-sm">
-            [NULL] Cart is empty.<br>Select items to compile.
-        </div>
+    <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-3">
+        <p id="empty-cart-msg" class="text-gray-500 text-center mt-10">[NULL] Cart is empty.<br>Select items to compile.</p>
     </div>
 
-    <!-- Footer Totale e Checkout -->
-    <div class="p-6 border-t border-gray-700 bg-primary">
-        <div class="flex justify-between items-center mb-4 font-bold text-lg">
-            <span>TOTAL:</span>
-            <span id="cart-total" class="font-mono text-accent">€ 0.00</span>
+    <div class="p-6 border-t border-gray-700 bg-gray-900">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-gray-400">TOTAL:</span>
+            <span id="cart-total" class="text-2xl font-bold text-green-400">€ 0.00</span>
         </div>
-        <!-- Pulsante con ID checkout-btn che viene gestito dallo script -->
-        <button id="checkout-btn" class="w-full bg-accent text-primary font-bold py-3 rounded hover:bg-white transition-colors font-mono">
+        <button class="w-full bg-green-500 hover:bg-green-600 text-black font-bold py-3 rounded transition-all duration-200 transform hover:scale-105">
             $ sudo checkout_stripe
         </button>
     </div>
 </div>
 
-<!-- NAVBAR DEFINITIVA v2.0 -->
-    <!-- === 1. CARRELLO (Pannello Laterale) === -->
-    <div id="cart-overlay" class="fixed inset-0 bg-black/50 z-[60] hidden backdrop-blur-sm transition-opacity"></div>
 
-    <div id="cart-panel" class="fixed top-0 right-0 w-full md:w-96 h-full bg-surface border-l border-gray-700 z-[70] transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
-        <!-- Header -->
-        <div class="p-6 border-b border-gray-700 flex justify-between items-center bg-primary">
-            <h2 class="font-mono text-xl font-bold flex items-center gap-2">
-                <span class="text-accent">></span> CART.log
-            </h2>
-            <button id="close-cart" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-        </div>
-
-        <!-- Lista Prodotti -->
-        <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
-            <div id="empty-cart-msg" class="text-center text-gray-500 mt-10 font-mono text-sm">
-                [NULL] Cart is empty.<br>Select items to compile.
-            </div>
-        </div>
-
-        <!-- Footer Checkout -->
-        <div class="p-6 border-t border-gray-700 bg-primary">
-            <div class="flex justify-between items-center mb-4 font-bold text-lg">
-                <span>TOTAL:</span>
-                <span id="cart-total" class="font-mono text-accent">€ 0.00</span>
-            </div>
-            <button id="checkout-btn" class="w-full bg-accent text-primary font-bold py-3 rounded hover:bg-white transition-colors font-mono">
-                $ sudo checkout_stripe
-            </button>
-        </div>
-    </div>
-
-
+    <!-- NAVBAR DEFINITIVA v2.0 -->
     <!-- === 2. NAVBAR (Universale per tutte le pagine) === -->
-    <nav class="fixed w-full z-50 bg-primary/95 backdrop-blur border-b border-gray-700 px-6 py-4">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            
-            <!-- Logo -->
-            <a href="index.html" class="font-mono text-xl font-bold text-accent hover:opacity-80 transition-opacity">
-                <span class="text-highlight">&lt;</span>TerraByte<span class="text-highlight">/&gt;</span>
-            </a>
-            
-            <!-- Menu Desktop -->
-            <ul class="hidden md:flex space-x-6 font-mono text-sm">
-                <li><a href="index.html" class="hover:text-accent transition-colors">./home</a></li>
-                <li><a href="menu.html" class="hover:text-accent transition-colors">./menu</a></li>
-                <li><a href="shop.html" class="hover:text-accent transition-colors">./shop_merch</a></li>
-                <li><a href="coworking.html" class="hover:text-accent transition-colors">./coworking</a></li>
-                <li><a href="sustainability.html" class="hover:text-highlight transition-colors">./zero_waste</a></li>
-            </ul>
+    <!-- NAVIGATION BAR -->
+    <nav class="fixed top-0 w-full bg-gray-900 bg-opacity-95 backdrop-blur-sm z-30 border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-green-400"><span class="text-highlight"><</span>TerraByte<span class="text-highlight">/></span></a>
 
-            <!-- Azioni Destra -->
-            <div class="flex items-center gap-4">
-                <!-- Bottone Carrello -->
-                <button id="open-cart-btn" class="relative text-gray-300 hover:text-white transition-colors">
-                    <span class="text-xl">🛒</span>
-                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="index.html" class="text-gray-300 hover:text-green-400 transition">./home</a>
+                <a href="menu.html" class="text-gray-300 hover:text-green-400 transition">./menu</a>
+                <a href="shop.html" class="text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+                <a href="coworking.html" class="text-green-400 font-bold transition">./coworking</a>
+                <a href="events.html" class="text-gray-300 hover:text-green-400 transition">./events</a>
+                <a href="blog.html" class="text-gray-300 hover:text-green-400 transition">./blog</a>
+                <a href="sustainability.html" class="text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
                 </button>
 
-                <!-- Pulsante Prenota -->
-                <a href="coworking.html#book" class="hidden md:block bg-accent text-primary font-bold px-4 py-2 rounded hover:bg-white transition-colors border border-transparent text-sm">
-                    Prenota_Desk()
-                </a>
+                <!-- Hamburger Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
 
-                <!-- Hamburger Mobile -->
-                <div id="mobile-menu-btn" class="md:hidden text-accent text-2xl cursor-pointer p-1 ml-2">
-                    &#9776; 
-                </div>
+
             </div>
         </div>
 
-        <!-- Menu Mobile Dropdown -->
-        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-primary border-b border-gray-700 shadow-xl">
-            <ul class="flex flex-col p-4 space-y-4 font-mono text-sm">
-                <li><a href="index.html" class="block hover:text-accent">./home</a></li>
-                <li><a href="menu.html" class="block hover:text-accent">./menu</a></li>
-                <li><a href="shop.html" class="block hover:text-accent">./shop_merch</a></li>
-                <li><a href="coworking.html" class="block hover:text-accent">./coworking</a></li>
-                <li><a href="sustainability.html" class="block hover:text-highlight">./zero_waste</a></li>
-                <li>
-                    <a href="coworking.html#book" class="block text-center bg-accent text-primary font-bold px-4 py-3 rounded hover:bg-white transition-colors">
-                        Prenota_Desk()
-                    </a>
-                </li>
-            </ul>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden px-6 pb-4 space-y-2 bg-gray-900 border-t border-gray-800">
+            <a href="index.html" class="block text-gray-300 hover:text-green-400 transition py-2">./home</a>
+            <a href="menu.html" class="block text-gray-300 hover:text-green-400 transition py-2">./menu</a>
+            <a href="shop.html" class="block text-gray-300 hover:text-green-400 transition py-2">./shop_merch</a>
+            <a href="coworking.html" class="block text-green-400 font-bold transition py-2">./coworking</a>
+            <a href="events.html" class="block text-gray-300 hover:text-green-400 transition py-2">./events</a>
+            <a href="blog.html" class="block text-gray-300 hover:text-green-400 transition py-2">./blog</a>
+            <a href="sustainability.html" class="block text-gray-300 hover:text-green-400 transition py-2">./zero_waste</a>
         </div>
     </nav>
 
@@ -311,11 +313,45 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-primary border-t border-gray-800 pt-12 pb-6">
-        <div class="text-center">
-            <p class="text-gray-600 text-xs font-mono">
-                © 2025 TerraByte Coffee.
-            </p>
+    <footer class="bg-gray-900 border-t border-gray-800 py-12 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-green-400 mb-4">TerraByte</h3>
+                    <p class="text-sm text-gray-400">Il primo Phygital Coffee per developer a Milano Isola.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="index.html" class="hover:text-green-400">Home</a></li>
+                        <li><a href="menu.html" class="hover:text-green-400">Menu</a></li>
+                        <li><a href="shop.html" class="hover:text-green-400">Shop</a></li>
+                        <li><a href="coworking.html" class="hover:text-green-400">Coworking</a></li>
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Community</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="#" class="hover:text-green-400">Discord</a></li>
+                        <li><a href="#" class="hover:text-green-400">Newsletter</a></li>
+                        <li><a href="sustainability.html" class="hover:text-green-400">Sustainability</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contatti</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>📍 Via Pastrengo, Milano Isola</li>
+                        <li>📧 hello@terrabyte.coffee</li>
+                        <li>📱 +39 02 1234 5678</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                <p>© 2026 TerraByte Coffee. All rights reserved. | Made with ☕ & 💻 in Milano</p>
+            </div>
         </div>
     </footer>
 

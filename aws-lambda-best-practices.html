@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Lambda Best Practices per Startup | TerraByte Blog</title>
+    <meta name="description" content="Guida completa alle best practices AWS Lambda per startup: cold start, concurrency, cost optimization e deployment sicuro in produzione.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tb-dark': '#1e1e1e',
+                        'tb-gray-900': '#2D3436',
+                        'tb-gray-800': '#394042',
+                        'tb-gray-700': '#4a5254',
+                        'tb-gray-600': '#636e72',
+                        'tb-gray-400': '#b2bec3',
+                        'tb-light': '#E0E0E0',
+                        'tb-green': '#00B894',
+                        'tb-green-dark': '#00a080',
+                        'tb-purple': '#D6A2E8',
+                        'tb-blue': '#0984e3',
+                    },
+                    fontFamily: {
+                        'mono': ['Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                @apply bg-gradient-to-br from-tb-dark to-tb-gray-900 text-tb-light font-mono min-h-screen;
+            }
+
+            /* Scrollbar */
+            ::-webkit-scrollbar {
+                width: 10px;
+                background: #2D3436;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #394042;
+                border: 1px solid #00B894;
+                border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #00B894;
+            }
+        }
+
+        @layer components {
+            /* Animazioni */
+            @keyframes blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+
+            .cursor-blink {
+                animation: blink 1s step-end infinite;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.6s ease-in;
+            }
+
+            /* Card hover effect */
+            .card-hover {
+                @apply transition-all duration-300;
+            }
+
+            .card-hover:hover {
+                @apply -translate-y-1;
+                box-shadow: 0 10px 30px rgba(0, 184, 148, 0.2);
+            }
+
+            /* Border glow */
+            .border-glow-green:hover {
+                box-shadow: 0 0 20px rgba(0, 184, 148, 0.4);
+            }
+
+            /* Article specific styles */
+            .article-content {
+                @apply text-tb-light leading-relaxed;
+            }
+
+            .article-content h2 {
+                @apply text-2xl font-bold text-tb-green mb-4 mt-8;
+            }
+
+            .article-content h3 {
+                @apply text-xl font-bold text-tb-green mb-3 mt-6;
+            }
+
+            .article-content h4 {
+                @apply text-lg font-bold text-tb-purple mb-2 mt-4;
+            }
+
+            .article-content p {
+                @apply mb-4;
+            }
+
+            .article-content ul {
+                @apply mb-6 ml-6;
+            }
+
+            .article-content li {
+                @apply mb-2;
+            }
+
+            .article-content strong {
+                @apply text-tb-green font-bold;
+            }
+
+            .article-content em {
+                @apply text-tb-purple italic;
+            }
+
+            .code-block {
+                @apply bg-tb-gray-900 p-4 rounded border border-tb-gray-700 font-mono text-sm mb-4 overflow-x-auto;
+            }
+
+            /* Checklist styles */
+            .checklist-item {
+                @apply flex items-start gap-3 mb-3;
+            }
+
+            .checklist-item::before {
+                content: '✓';
+                @apply text-tb-green font-bold text-lg;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CART OVERLAY -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- CART PANEL -->
+    <div id="cart-panel" class="fixed top-0 right-0 h-full w-96 max-w-full bg-gradient-to-b from-tb-gray-900 to-tb-dark shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col border-l-2 border-tb-green">
+        <div class="p-6 border-b border-tb-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-tb-green">CART.log</h2>
+            <button id="close-cart" class="text-tb-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-3">
+            <p id="empty-cart-msg" class="text-tb-gray-600 text-center mt-10">[NULL] Cart is empty.<br>Select items to compile.</p>
+        </div>
+
+        <div class="p-6 border-t border-tb-gray-800 bg-tb-gray-900">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-tb-gray-400">TOTAL:</span>
+                <span id="cart-total" class="text-2xl font-bold text-tb-green">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-tb-green hover:bg-tb-green-dark text-black font-bold py-3 rounded transition-all duration-200 transform hover:scale-105">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVIGATION BAR -->
+    <nav class="fixed top-0 w-full bg-gray-900 bg-opacity-95 backdrop-blur-sm z-30 border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-green-400"><span class="text-highlight"><</span>TerraByte<span class="text-highlight">/></span></a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="index.html" class="text-gray-300 hover:text-green-400 transition">./home</a>
+                <a href="menu.html" class="text-gray-300 hover:text-green-400 transition">./menu</a>
+                <a href="shop.html" class="text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+                <a href="coworking.html" class="text-gray-300 hover:text-green-400 transition">./coworking</a>
+                <a href="events.html" class="text-gray-300 hover:text-green-400 transition">./events</a>
+                <a href="blog.html" class="text-green-400 font-bold transition">./blog</a>
+                <a href="sustainability.html" class="text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+                <a href="coworking.html#book" class="bg-green-500 hover:bg-green-600 text-black font-bold px-4 py-2 rounded transition transform hover:scale-105">
+                    Prenota_Desk()
+                </a>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden px-6 pb-4 space-y-2">
+            <a href="index.html" class="block text-gray-300 hover:text-green-400 transition">./home</a>
+            <a href="menu.html" class="block text-gray-300 hover:text-green-400 transition">./menu</a>
+            <a href="shop.html" class="block text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+            <a href="coworking.html" class="block text-gray-300 hover:text-green-400 transition">./coworking</a>
+            <a href="events.html" class="block text-gray-300 hover:text-green-400 transition">./events</a>
+            <a href="blog.html" class="block text-green-400 font-bold transition">./blog</a>
+            <a href="sustainability.html" class="block text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+        </div>
+    </nav>
+
+    <!-- ARTICLE HEADER -->
+    <section class="pt-32 pb-16 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="mb-8">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-tb-gray-500 text-sm">• 5 Gen 2026 • 7 min read</span>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">
+                    AWS Lambda Best Practices per Startup
+                </h1>
+                <p class="text-xl text-tb-gray-400 max-w-2xl">
+                    Cold start, concurrency limits, cost optimization e deployment sicuro in produzione. Tutto quello che devi sapere prima di andare live.
+                </p>
+            </div>
+
+            <!-- Article Meta -->
+            <div class="flex flex-wrap gap-2 mb-8">
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#aws</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#serverless</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#lambda</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#startup</span>
+                <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#cloud</span>
+            </div>
+
+            <!-- Back to Blog -->
+            <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                ← Back to Blog
+            </a>
+        </div>
+    </section>
+
+    <!-- ARTICLE CONTENT -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <article class="article-content">
+
+                <h2>Perché Lambda è strategico per le startup</h2>
+                <p>AWS Lambda permette di costruire backend scalabili senza gestire server, riducendo costi operativi e overhead DevOps. Per una startup con risorse limitate, significa focus su business logic invece che su infrastruttura. Tuttavia, un uso non ottimizzato può generare sorprese in termini di latenza, costi e limiti di concorrenza.</p>
+
+                <h2>Cold start: il problema e le soluzioni</h2>
+
+                <h3>Cos'è il cold start</h3>
+                <p>Quando una Lambda viene invocata dopo un periodo di inattività, AWS deve allocare un nuovo execution environment: scaricare il codice, inizializzare il runtime e caricare le dipendenze. Questo processo, detto cold start, può aggiungere centinaia di millisecondi o più al tempo di risposta, impattando UX e SLA.</p>
+
+                <h3>Fattori che influenzano il cold start</h3>
+                <ul>
+                    <li><strong>Dimensione del deployment package:</strong> package più grandi (molte dipendenze, binari pesanti) impiegano più tempo a essere scaricati e inizializzati.</li>
+                    <li><strong>Runtime scelto:</strong> linguaggi interpretati (Python, Node.js) hanno cold start più rapidi di JVM-based (Java) o .NET, che richiedono inizializzazione pesante.</li>
+                    <li><strong>Memoria allocata:</strong> più memoria = più CPU dedicata durante l'inizializzazione, quindi cold start potenzialmente più breve.</li>
+                    <li><strong>VPC attachment:</strong> Lambda dentro VPC richiede creazione di ENI (Elastic Network Interface), aggiungendo secondi al cold start. AWS ha migliorato questo con Hyperplane ENI, ma resta un overhead.</li>
+                </ul>
+
+                <h3>Best practices per ridurre cold start</h3>
+
+                <h4>Minimizza dimensione package</h4>
+                <ul>
+                    <li>Rimuovi dipendenze non usate e file di test/documentazione dal deployment.</li>
+                    <li>Usa Lambda Layers per condividere librerie comuni tra funzioni, evitando duplicazione.</li>
+                    <li>Considera strumenti di bundling (es. Webpack per Node.js, PyInstaller per Python) per ridurre footprint.</li>
+                </ul>
+
+                <h4>Scegli runtime appropriato</h4>
+                <ul>
+                    <li>Per API latency-sensitive, preferisci Python 3.x o Node.js 18+.</li>
+                    <li>Evita Java o .NET se il cold start è critico, a meno di non implementare SnapStart (Java) o Provisioned Concurrency.</li>
+                </ul>
+
+                <h4>Provisioned Concurrency</h4>
+                <ul>
+                    <li>Pre-inizializza un numero fisso di execution environment sempre "caldi".</li>
+                    <li>Utile per endpoint ad alta priorità (es. autenticazione, pagamenti).</li>
+                    <li>Trade-off: costa di più (paghi per le istanze pre-allocate anche se non usate), quindi usalo con criterio.</li>
+                </ul>
+
+                <h4>Lazy loading</h4>
+                <ul>
+                    <li>Carica dipendenze pesanti (SDK, librerie ML) solo quando necessario, non a livello globale.</li>
+                    <li>Inizializza connessioni a database o servizi esterni fuori dal handler Lambda, in modo che siano riutilizzate tra invocazioni successive nello stesso container.</li>
+                </ul>
+
+                <h4>SnapStart per Java</h4>
+                <ul>
+                    <li>Feature AWS che crea snapshot del runtime Java dopo l'inizializzazione, riducendo cold start del 90%.</li>
+                    <li>Disponibile solo per Java 11+ gestito da AWS.</li>
+                </ul>
+
+                <h2>Concurrency limits e gestione del traffico</h2>
+
+                <h3>Come funziona la concurrency in Lambda</h3>
+                <p>AWS Lambda scala automaticamente creando nuove istanze parallele per gestire invocazioni simultanee. Ogni account AWS ha un limite di concurrency (default 1000 esecuzioni concorrenti per Region).</p>
+
+                <h3>Problemi comuni</h3>
+                <ul>
+                    <li><strong>Throttling:</strong> se superi il limite, le invocazioni eccedenti ricevono errore 429 (TooManyRequestsException).</li>
+                    <li><strong>Burst limits:</strong> Lambda può scalare rapidamente fino a 3000 esecuzioni concorrenti nei primi minuti, poi +500/minuto. Picchi improvvisi possono causare throttling temporaneo.</li>
+                    <li><strong>Reserved concurrency mal configurata:</strong> riservare troppa concurrency a una funzione priva risorse alle altre funzioni dello stesso account.</li>
+                </ul>
+
+                <h3>Best practices per concurrency</h3>
+
+                <h4>Monitora metriche CloudWatch</h4>
+                <ul>
+                    <li>ConcurrentExecutions: quante istanze parallele sono attive.</li>
+                    <li>Throttles: quante richieste sono state rifiutate per limite.</li>
+                    <li>Configura allarmi per ricevere notifiche prima di saturare il limite.</li>
+                </ul>
+
+                <h4>Request increase del limite</h4>
+                <ul>
+                    <li>Se prevedi traffico alto, richiedi aumento del soft limit tramite AWS Support.</li>
+                    <li>Documenta casi d'uso e pattern di traffico per giustificare la richiesta.</li>
+                </ul>
+
+                <h4>Usa Reserved Concurrency strategicamente</h4>
+                <ul>
+                    <li>Riserva concurrency solo per funzioni critiche (es. payment processing, autenticazione).</li>
+                    <li>Evita di riservare troppo per funzioni a basso traffico: sottrae risorse al pool condiviso.</li>
+                </ul>
+
+                <h4>Async invocation e SQS</h4>
+                <ul>
+                    <li>Per carichi non-real-time (processing batch, notifiche, analytics), usa invocazione asincrona o triggering da SQS.</li>
+                    <li>Permette di gestire spike di traffico con retry automatici e DLQ (Dead Letter Queue) per errori.</li>
+                </ul>
+
+                <h4>Throttling graceful</h4>
+                <ul>
+                    <li>Implementa retry esponenziale con backoff nei client che invocano Lambda.</li>
+                    <li>Usa API Gateway con throttling configurato per proteggere Lambda da traffico malevolo o anomalo.</li>
+                </ul>
+
+                <h2>Cost optimization: pagare solo quello che serve</h2>
+
+                <h3>Modello di pricing Lambda</h3>
+                <p>Lambda addebita in base a:</p>
+                <ul>
+                    <li>Numero di invocazioni: $0.20 per milione di richieste (oltre il free tier di 1M/mese).</li>
+                    <li>Durata + memoria allocata: calcolata in GB-secondo. Es. funzione con 512 MB che gira 1 secondo = 0.5 GB-secondo.</li>
+                </ul>
+
+                <h3>Errori comuni che aumentano i costi</h3>
+                <ul>
+                    <li>Allocare troppa memoria "per sicurezza" senza misurare il reale utilizzo.</li>
+                    <li>Funzioni che girano per secondi inutili aspettando timeout di connessioni esterne.</li>
+                    <li>Retry infiniti su errori non-recoverable, generando migliaia di invocazioni duplicate.</li>
+                </ul>
+
+                <h3>Best practices per ridurre costi</h3>
+
+                <h4>Right-size memoria</h4>
+                <ul>
+                    <li>Usa Lambda Power Tuning tool per testare diverse configurazioni di memoria e trovare il punto ottimale tra costo e performance.</li>
+                    <li>Spesso aumentare la memoria riduce la durata totale (più CPU = esecuzione più veloce), abbassando i costi complessivi.</li>
+                </ul>
+
+                <h4>Timeout realistici</h4>
+                <ul>
+                    <li>Imposta timeout basati sul tempo massimo reale necessario (es. API call verso servizio esterno) invece del default di 15 minuti.</li>
+                    <li>Previeni che funzioni "appese" consumino minuti di compute inutilmente.</li>
+                </ul>
+
+                <h4>Batch processing intelligente</h4>
+                <ul>
+                    <li>Se processi eventi da Kinesis o DynamoDB Streams, aumenta batch size per ridurre numero totale di invocazioni.</li>
+                    <li>Trade-off: batch grandi riducono invocazioni ma aumentano durata per ogni esecuzione.</li>
+                </ul>
+
+                <h4>Caching e reuse di connessioni</h4>
+                <ul>
+                    <li>Mantieni connessioni a database (RDS, DynamoDB) fuori dall'handler Lambda, sfruttando il container warm.</li>
+                    <li>Usa caching in-memory per dati che cambiano poco (configurazioni, token OAuth).</li>
+                </ul>
+
+                <h4>Monitora con Cost Explorer</h4>
+                <ul>
+                    <li>Configura AWS Cost Explorer per tracciare spesa Lambda suddivisa per funzione.</li>
+                    <li>Identifica funzioni outlier (quelle con costo anomalo) e ottimizzale prioritariamente.</li>
+                </ul>
+
+                <h2>Deployment sicuro e rollback strategy</h2>
+
+                <h3>Blue-green deployment con alias e versioning</h3>
+                <p>Lambda supporta versioning nativo e alias:</p>
+                <ul>
+                    <li>Version: snapshot immutabile del codice e configurazione.</li>
+                    <li>Alias: puntatore a una versione specifica (es. prod, staging), con possibilità di traffic shifting.</li>
+                </ul>
+
+                <h3>Best practices deployment</h3>
+
+                <h4>Usa alias per ambienti</h4>
+                <ul>
+                    <li>Crea alias dev, staging, prod che puntano a versioni diverse della stessa funzione.</li>
+                    <li>Permette rollback istantaneo: basta spostare l'alias a una versione precedente.</li>
+                </ul>
+
+                <h4>Traffic shifting graduato</h4>
+                <ul>
+                    <li>Lambda supporta weighted alias (es. 90% traffico su v2, 10% su v3) per canary deployment.</li>
+                    <li>Monitora errori e latenza: se la nuova versione ha problemi, shifta tutto il traffico alla vecchia in pochi secondi.</li>
+                </ul>
+
+                <h4>Automated testing pre-deploy</h4>
+                <ul>
+                    <li>Usa AWS SAM o Serverless Framework con hook di test automatici prima del deploy.</li>
+                    <li>Include integration test che invocano Lambda con payload reali e validano output.</li>
+                </ul>
+
+                <h4>CloudWatch Alarms per rollback automatico</h4>
+                <ul>
+                    <li>Configura allarmi su metriche critiche (error rate, duration, throttles).</li>
+                    <li>Integra con pipeline CI/CD per rollback automatico se un allarme scatta dopo il deploy.</li>
+                </ul>
+
+                <h4>Infrastructure as Code (IaC)</h4>
+                <ul>
+                    <li>Gestisci Lambda con CloudFormation, Terraform o AWS CDK per avere deploy ripetibili e versionati.</li>
+                    <li>Evita modifiche manuali dalla console AWS che non sono tracciabili.</li>
+                </ul>
+
+                <h2>Security best practices per Lambda in produzione</h2>
+
+                <h3>IAM roles e least privilege</h3>
+                <p>Ogni Lambda ha un execution role IAM che determina quali risorse AWS può accedere.</p>
+
+                <p><strong>Best practices:</strong></p>
+                <ul>
+                    <li>Principle of least privilege: concedi solo i permessi minimi necessari (es. dynamodb:PutItem su una tabella specifica, non dynamodb:* su tutte).</li>
+                    <li>Separa ruoli per funzione: ogni Lambda dovrebbe avere il proprio execution role dedicato, non condiviso.</li>
+                    <li>Audita con IAM Access Analyzer: identifica permessi over-provisioned.</li>
+                </ul>
+
+                <h3>Gestione segreti</h3>
+                <p>Non hardcodare credenziali o API key nel codice Lambda.</p>
+
+                <p><strong>Soluzioni sicure:</strong></p>
+                <ul>
+                    <li>AWS Secrets Manager o Systems Manager Parameter Store per conservare credenziali, con rotazione automatica.</li>
+                    <li>Carica segreti all'avvio della Lambda (fuori dall'handler) e cachali per ridurre chiamate API.</li>
+                    <li>Usa KMS per cifrare variabili d'ambiente sensibili.</li>
+                </ul>
+
+                <h3>Logging e monitoring</h3>
+                <ul>
+                    <li>Abilita CloudWatch Logs per tutte le Lambda, con log retention configurato (evita accumulo infinito di log costosi).</li>
+                    <li>Usa X-Ray per tracing distribuito e identificare bottleneck tra Lambda, API Gateway, database e servizi esterni.</li>
+                    <li>Non loggare mai informazioni sensibili (password, token, PII) in chiaro.</li>
+                </ul>
+
+                <h2>Checklist finale prima di andare in produzione</h2>
+
+                <div class="checklist-item">
+                    Cold start mitigato con Provisioned Concurrency o ottimizzazione package.
+                </div>
+                <div class="checklist-item">
+                    Concurrency limits monitorati con allarmi CloudWatch.
+                </div>
+                <div class="checklist-item">
+                    Timeout e memoria configurati in base a test reali, non valori di default.
+                </div>
+                <div class="checklist-item">
+                    Costi stimati con Lambda Power Tuning e Cost Explorer.
+                </div>
+                <div class="checklist-item">
+                    Deployment strategy con alias, versioning e rollback automatizzato.
+                </div>
+                <div class="checklist-item">
+                    IAM roles con least privilege e segreti gestiti tramite Secrets Manager.
+                </div>
+                <div class="checklist-item">
+                    Logging configurato con retention policy e X-Ray abilitato.
+                </div>
+                <div class="checklist-item">
+                    Load testing su staging per verificare comportamento sotto traffico reale.
+                </div>
+                <div class="checklist-item">
+                    DLQ (Dead Letter Queue) configurata per gestire errori non-recoverable.
+                </div>
+                <div class="checklist-item">
+                    Documentazione aggiornata su architettura, dipendenze e procedure di rollback.
+                </div>
+
+                <p>AWS Lambda offre scalabilità e semplicità operativa senza precedenti per startup, ma richiede attenzione su cold start, concurrency e costi per evitare problemi in produzione. Con le best practices giuste, Lambda diventa un pilastro affidabile ed economico per backend serverless di qualità enterprise.</p>
+
+                <!-- Article Footer -->
+                <div class="mt-12 pt-8 border-t border-tb-gray-700">
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#aws</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#serverless</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#lambda</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#startup</span>
+                        <span class="text-xs bg-tb-gray-800 px-2 py-1 rounded">#cloud</span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <a href="blog.html" class="inline-flex items-center gap-2 text-tb-green hover:text-tb-green-dark transition">
+                            ← Back to Blog
+                        </a>
+
+                        <!-- Share buttons could go here -->
+                        <div class="text-tb-gray-500 text-sm">
+                            Share this article
+                        </div>
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </section>
+
+    <!-- NEWSLETTER SECTION -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="bg-gradient-to-r from-tb-green to-tb-blue p-12 rounded-xl text-center">
+                <h2 class="text-3xl font-bold mb-4 text-black">
+                    📬 Subscribe alla Newsletter
+                </h2>
+                <p class="text-black text-opacity-80 mb-6 max-w-2xl mx-auto">
+                    Ricevi gli articoli nuovi, eventi esclusivi e AWS tips direttamente nella tua inbox. Una volta a settimana, zero spam.
+                </p>
+                <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <input
+                        type="email"
+                        placeholder="dev@example.com"
+                        class="flex-1 px-4 py-3 rounded bg-white text-black font-mono focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                    <button
+                        type="submit"
+                        class="bg-black text-tb-green font-bold px-6 py-3 rounded hover:bg-tb-gray-900 transition"
+                    >
+                        subscribe()
+                    </button>
+                </form>
+                <p class="text-black text-opacity-60 text-xs mt-4">
+                    Unsubscribe in qualsiasi momento. Privacy-first.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-12 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-green-400 mb-4">TerraByte</h3>
+                    <p class="text-sm text-gray-400">Il primo Phygital Coffee per developer a Milano Isola.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="index.html" class="hover:text-green-400">Home</a></li>
+                        <li><a href="menu.html" class="hover:text-green-400">Menu</a></li>
+                        <li><a href="shop.html" class="hover:text-green-400">Shop</a></li>
+                        <li><a href="coworking.html" class="hover:text-green-400">Coworking</a></li>
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Community</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                        <li><a href="#" class="hover:text-green-400">Discord</a></li>
+                        <li><a href="sustainability.html" class="hover:text-green-400">Sustainability</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contatti</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>📍 Via Pastrengo, Milano Isola</li>
+                        <li>📧 hello@terrabyte.coffee</li>
+                        <li>📱 +39 02 1234 5678</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                <p>© 2026 TerraByte Coffee. All rights reserved. | Made with ☕ & 💻 in Milano</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
