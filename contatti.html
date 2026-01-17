@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contatti | TerraByte Coffee</title>
+    <meta name="description" content="Contattaci per info su coworking, eventi, collaborazioni. Siamo a Milano Isola, Via Pastrengo.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tb-dark': '#1e1e1e',
+                        'tb-gray-900': '#2D3436',
+                        'tb-gray-800': '#394042',
+                        'tb-gray-700': '#4a5254',
+                        'tb-gray-600': '#636e72',
+                        'tb-gray-400': '#b2bec3',
+                        'tb-light': '#E0E0E0',
+                        'tb-green': '#00B894',
+                        'tb-green-dark': '#00a080',
+                        'tb-purple': '#D6A2E8',
+                        'tb-blue': '#0984e3',
+                        highlight: '#D6A2E8',
+                    },
+                    fontFamily: {
+                        'mono': ['Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                @apply bg-gradient-to-br from-tb-dark to-tb-gray-900 text-tb-light font-mono min-h-screen;
+            }
+
+            /* Scrollbar */
+            ::-webkit-scrollbar {
+                width: 10px;
+                background: #2D3436;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: #394042;
+                border: 1px solid #00B894;
+                border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #00B894;
+            }
+        }
+
+        @layer components {
+            /* Animazioni */
+            @keyframes blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+
+            .cursor-blink {
+                animation: blink 1s step-end infinite;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.6s ease-in;
+            }
+
+            /* Card hover effect */
+            .card-hover {
+                @apply transition-all duration-300;
+            }
+
+            .card-hover:hover {
+                @apply -translate-y-1;
+                box-shadow: 0 10px 30px rgba(0, 184, 148, 0.2);
+            }
+
+            /* Border glow */
+            .border-glow-green:hover {
+                box-shadow: 0 0 20px rgba(0, 184, 148, 0.4);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CART OVERLAY -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden backdrop-blur-sm"></div>
+
+    <!-- CART PANEL -->
+    <div id="cart-panel" class="fixed top-0 right-0 h-full w-96 max-w-full bg-gradient-to-b from-tb-gray-900 to-tb-dark shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col border-l-2 border-tb-green">
+        <div class="p-6 border-b border-tb-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-tb-green">CART.log</h2>
+            <button id="close-cart" class="text-tb-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-3">
+            <p id="empty-cart-msg" class="text-tb-gray-600 text-center mt-10">[NULL] Cart is empty.<br>Select items to compile.</p>
+        </div>
+
+        <div class="p-6 border-t border-tb-gray-800 bg-tb-gray-900">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-tb-gray-400">TOTAL:</span>
+                <span id="cart-total" class="text-2xl font-bold text-tb-green">€ 0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-tb-green hover:bg-tb-green-dark text-black font-bold py-3 rounded transition-all duration-200 transform hover:scale-105">
+                $ sudo checkout_stripe
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVBAR DEFINITIVA v2.0 -->
+    <!-- === 2. NAVBAR (Universale per tutte le pagine) === -->
+    <!-- NAVIGATION BAR -->
+    <nav class="fixed top-0 w-full bg-gray-900 bg-opacity-95 backdrop-blur-sm z-30 border-b border-gray-800">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-green-400"><span class="text-highlight"><</span>TerraByte<span class="text-highlight">/></span></a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="index.html" class="text-gray-300 hover:text-green-400 transition">./home</a>
+                <a href="menu.html" class="text-gray-300 hover:text-green-400 transition">./menu</a>
+                <a href="shop.html" class="text-gray-300 hover:text-green-400 transition">./shop_merch</a>
+                <a href="coworking.html" class="text-gray-300 hover:text-green-400 transition">./coworking</a>
+                <a href="events.html" class="text-gray-300 hover:text-green-400 transition">./events</a>
+                <a href="blog.html" class="text-gray-300 hover:text-green-400 transition">./blog</a>
+                <a href="sustainability.html" class="text-gray-300 hover:text-green-400 transition">./zero_waste</a>
+                <a href="contatti.html" class="text-green-400 font-bold transition">./contacts</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="open-cart-btn" class="relative text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+
+                <!-- Hamburger Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-gray-300 hover:text-green-400 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+
+
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden px-6 pb-4 space-y-2 bg-gray-900 border-t border-gray-800">
+            <a href="index.html" class="block text-gray-300 hover:text-green-400 transition py-2">./home</a>
+            <a href="menu.html" class="block text-gray-300 hover:text-green-400 transition py-2">./menu</a>
+            <a href="shop.html" class="block text-gray-300 hover:text-green-400 transition py-2">./shop_merch</a>
+            <a href="coworking.html" class="block text-gray-300 hover:text-green-400 transition py-2">./coworking</a>
+            <a href="events.html" class="block text-gray-300 hover:text-green-400 transition py-2">./events</a>
+            <a href="blog.html" class="block text-gray-300 hover:text-green-400 transition py-2">./blog</a>
+            <a href="sustainability.html" class="block text-gray-300 hover:text-green-400 transition py-2">./zero_waste</a>
+            <a href="contatti.html" class="block text-green-400 font-bold transition py-2">./contacts</a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="pt-32 pb-16 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="mb-8">
+                <p class="text-tb-green font-mono mb-2">// GET_IN_TOUCH</p>
+                <h1 class="text-5xl md:text-6xl font-bold mb-4">
+                    Contatti<span class="cursor-blink">_</span>
+                </h1>
+                <p class="text-xl text-tb-gray-400 max-w-3xl">
+                    Vuoi prenotare un desk, organizzare un evento o semplicemente bere un caffè? Siamo qui per te.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT INFO CARDS -->
+    <section class="pb-16 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-3 gap-6 mb-16">
+
+                <!-- Location -->
+                <div class="bg-tb-gray-800 rounded-lg p-6 border border-tb-gray-700 card-hover">
+                    <div class="text-4xl mb-4">📍</div>
+                    <h3 class="text-xl font-bold mb-2 text-tb-green">Location</h3>
+                    <p class="text-tb-gray-400 mb-2">Via Pastrengo, 14</p>
+                    <p class="text-tb-gray-400 mb-2">20159 Milano (MI)</p>
+                    <p class="text-tb-gray-400 text-sm">Zona Isola</p>
+                    <a href="https://maps.google.com/?q=Via+Pastrengo+14+Milano" target="_blank" class="inline-block mt-4 text-tb-green hover:text-tb-green-dark transition text-sm font-bold">
+                        Apri in Maps →
+                    </a>
+                </div>
+
+                <!-- Contact -->
+                <div class="bg-tb-gray-800 rounded-lg p-6 border border-tb-gray-700 card-hover">
+                    <div class="text-4xl mb-4">💬</div>
+                    <h3 class="text-xl font-bold mb-2 text-tb-green">Contatti</h3>
+                    <p class="text-tb-gray-400 mb-2">
+                        <span class="text-tb-green">Email:</span><br>
+                        <a href="mailto:hello@terrabyte.coffee" class="hover:text-tb-green transition">hello@terrabyte.coffee</a>
+                    </p>
+                    <p class="text-tb-gray-400 mb-2">
+                        <span class="text-tb-green">Tel:</span><br>
+                        <a href="tel:+390212345678" class="hover:text-tb-green transition">+39 02 1234 5678</a>
+                    </p>
+                    <p class="text-tb-gray-400 text-sm mt-4">Rispondiamo entro 24h</p>
+                </div>
+
+                <!-- Hours -->
+                <div class="bg-tb-gray-800 rounded-lg p-6 border border-tb-gray-700 card-hover">
+                    <div class="text-4xl mb-4">🕐</div>
+                    <h3 class="text-xl font-bold mb-2 text-tb-green">Orari</h3>
+                    <p class="text-tb-gray-400 mb-1">Lun - Ven: <span class="text-white">07:00 - 22:00</span></p>
+                    <p class="text-tb-gray-400 mb-1">Sabato: <span class="text-white">09:00 - 20:00</span></p>
+                    <p class="text-tb-gray-400 mb-1">Domenica: <span class="text-white">10:00 - 18:00</span></p>
+                    <p class="text-tb-green text-sm mt-4 flex items-center">
+                        <span class="inline-block w-2 h-2 bg-tb-green rounded-full mr-2 animate-pulse"></span>
+                        APERTO ORA
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- MAP SECTION -->
+    <section class="pb-16 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-3xl font-bold mb-8 flex items-center">
+                <span class="text-tb-green">></span> LOCATION_MAP
+            </h2>
+            <div class="rounded-xl overflow-hidden border-2 border-tb-gray-700 h-96">
+                <!-- Google Maps Embed -->
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2796.8287098394544!2d9.188024776919562!3d45.48642463107207!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4786c6d8b6a9a5e9%3A0x3e0b9f3f3f3f3f3f!2sVia%20Pastrengo%2C%20Milano%20MI!5e0!3m2!1sit!2sit!4v1234567890"
+                    width="100%" 
+                    height="100%" 
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade"
+                    class="grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition duration-300">
+                </iframe>
+            </div>
+            <p class="text-tb-gray-600 text-sm mt-4 text-center">
+                🚇 Metro M5 Isola (300m) • 🚌 Bus 43, 51 • 🚲 BikeMi station
+            </p>
+        </div>
+    </section>
+
+    <!-- CONTACT FORM -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <div class="bg-tb-gray-800 rounded-xl p-8 md:p-12 border border-tb-gray-700">
+                <h2 class="text-3xl font-bold mb-4 flex items-center">
+                    <span class="text-tb-green">></span> SEND_MESSAGE()
+                </h2>
+                <p class="text-tb-gray-400 mb-8">
+                    Compila il form per info su coworking, eventi, collaborazioni o partnership.
+                </p>
+
+                <form id="contact-form" class="space-y-6">
+                    <!-- Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-bold mb-2 text-tb-green">
+                            const name =
+                        </label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            required
+                            placeholder="Mario Rossi"
+                            class="w-full bg-tb-gray-900 border border-tb-gray-700 rounded px-4 py-3 text-tb-light focus:outline-none focus:border-tb-green transition"
+                        >
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-bold mb-2 text-tb-green">
+                            const email =
+                        </label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            required
+                            placeholder="mario@example.com"
+                            class="w-full bg-tb-gray-900 border border-tb-gray-700 rounded px-4 py-3 text-tb-light focus:outline-none focus:border-tb-green transition"
+                        >
+                    </div>
+
+                    <!-- Subject -->
+                    <div>
+                        <label for="subject" class="block text-sm font-bold mb-2 text-tb-green">
+                            const subject =
+                        </label>
+                        <select 
+                            id="subject" 
+                            name="subject" 
+                            required
+                            class="w-full bg-tb-gray-900 border border-tb-gray-700 rounded px-4 py-3 text-tb-light focus:outline-none focus:border-tb-green transition"
+                        >
+                            <option value="">Seleziona un'opzione...</option>
+                            <option value="coworking">Prenotazione Coworking</option>
+                            <option value="eventi">Info Eventi</option>
+                            <option value="partnership">Partnership / Collaborazione</option>
+                            <option value="catering">Catering Aziendale</option>
+                            <option value="altro">Altro</option>
+                        </select>
+                    </div>
+
+                    <!-- Message -->
+                    <div>
+                        <label for="message" class="block text-sm font-bold mb-2 text-tb-green">
+                            const message =
+                        </label>
+                        <textarea 
+                            id="message" 
+                            name="message" 
+                            rows="6" 
+                            required
+                            placeholder="Scrivi qui il tuo messaggio..."
+                            class="w-full bg-tb-gray-900 border border-tb-gray-700 rounded px-4 py-3 text-tb-light focus:outline-none focus:border-tb-green transition resize-none"
+                        ></textarea>
+                    </div>
+
+                    <!-- Privacy -->
+                    <div class="flex items-start">
+                        <input 
+                            type="checkbox" 
+                            id="privacy" 
+                            name="privacy" 
+                            required
+                            class="mt-1 mr-3 w-4 h-4 accent-tb-green"
+                        >
+                        <label for="privacy" class="text-sm text-tb-gray-400">
+                            Accetto il trattamento dei dati personali secondo la 
+                            <a href="#" class="text-tb-green hover:underline">Privacy Policy</a> (GDPR)
+                        </label>
+                    </div>
+
+                    <!-- Submit -->
+                    <button 
+                        type="submit" 
+                        class="w-full bg-tb-green hover:bg-tb-green-dark text-black font-bold py-4 rounded transition-all duration-200 transform hover:scale-105"
+                    >
+                        send_message() →
+                    </button>
+
+                    <!-- Success Message (hidden by default) -->
+                    <div id="success-msg" class="hidden bg-tb-green bg-opacity-20 border border-tb-green rounded p-4 text-tb-green text-center">
+                        ✓ Messaggio inviato! Ti risponderemo entro 24h.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOCIAL & COMMUNITY -->
+    <section class="pb-20 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-3xl font-bold mb-8 text-center">
+                Seguici anche su <span class="text-tb-green">Social</span>
+            </h2>
+            <div class="grid md:grid-cols-4 gap-6">
+
+                <!-- Instagram -->
+                <a href="#" class="bg-gradient-to-br from-purple-600 to-pink-500 rounded-lg p-6 text-center card-hover">
+                    <div class="text-4xl mb-3">📷</div>
+                    <h3 class="font-bold mb-1">Instagram</h3>
+                    <p class="text-sm opacity-80">@terrabyte.coffee</p>
+                </a>
+
+                <!-- LinkedIn -->
+                <a href="#" class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg p-6 text-center card-hover">
+                    <div class="text-4xl mb-3">💼</div>
+                    <h3 class="font-bold mb-1">LinkedIn</h3>
+                    <p class="text-sm opacity-80">TerraByte Milano</p>
+                </a>
+
+                <!-- Discord -->
+                <a href="#" class="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg p-6 text-center card-hover">
+                    <div class="text-4xl mb-3">💬</div>
+                    <h3 class="font-bold mb-1">Discord</h3>
+                    <p class="text-sm opacity-80">Tech Community</p>
+                </a>
+
+                <!-- GitHub -->
+                <a href="#" class="bg-gradient-to-br from-tb-gray-800 to-tb-gray-900 rounded-lg p-6 text-center card-hover border border-tb-gray-700">
+                    <div class="text-4xl mb-3">🐙</div>
+                    <h3 class="font-bold mb-1">GitHub</h3>
+                    <p class="text-sm opacity-80">Open Source</p>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-12 px-6">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-green-400 mb-4">TerraByte</h3>
+                    <p class="text-sm text-gray-400">Il primo Phygital Coffee per developer a Milano Isola.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="index.html" class="hover:text-green-400">Home</a></li>
+                        <li><a href="menu.html" class="hover:text-green-400">Menu</a></li>
+                        <li><a href="shop.html" class="hover:text-green-400">Shop</a></li>
+                        <li><a href="coworking.html" class="hover:text-green-400">Coworking</a></li>
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                        <li><a href="contatti.html" class="hover:text-green-400">Contatti</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Community</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="events.html" class="hover:text-green-400">Eventi</a></li>
+                        <li><a href="blog.html" class="hover:text-green-400">Blog</a></li>
+                        <li><a href="#" class="hover:text-green-400">Discord</a></li>
+                        <li><a href="sustainability.html" class="hover:text-green-400">Sustainability</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Contatti</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>📍 Via Pastrengo, Milano Isola</li>
+                        <li>📧 hello@terrabyte.coffee</li>
+                        <li>📱 +39 02 1234 5678</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+                <p>© 2026 TerraByte Coffee. All rights reserved. | Made with ☕ & 💻 in Milano</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Form submission handler
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Simulazione invio (in produzione: chiamata API o email service)
+            const formData = new FormData(this);
+            console.log('Form data:', Object.fromEntries(formData));
+
+            // Mostra messaggio successo
+            document.getElementById('success-msg').classList.remove('hidden');
+
+            // Reset form
+            this.reset();
+
+            // Nascondi messaggio dopo 5 secondi
+            setTimeout(() => {
+                document.getElementById('success-msg').classList.add('hidden');
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
